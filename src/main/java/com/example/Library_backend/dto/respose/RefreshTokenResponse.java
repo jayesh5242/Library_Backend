@@ -7,15 +7,10 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthResponse {
+public class RefreshTokenResponse {
 
     private String accessToken;
     private String refreshToken;
     private String tokenType = "Bearer";
-    private String email;
-    private String fullName;
-    private String role;
-    private Long userId;
-    private String department;
-    private Boolean isEmailVerified;
+    private String message = "Token refreshed successfully!";
 }

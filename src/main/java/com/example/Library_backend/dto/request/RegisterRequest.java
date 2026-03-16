@@ -20,8 +20,11 @@ public class RegisterRequest {
     private String password;
 
     private String phone;
+
+    // Role: STUDENT, FACULTY, LIBRARIAN, SUPER_ADMIN
     private String role;
+
     private String department;
-    private String enrollmentNo;
-    private String employeeId;
+    private String enrollmentNo;  // for students
+    private String employeeId;    // for faculty/staff
 }

@@ -7,15 +7,15 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 
-@Data                    // Lombok: auto creates getters, setters, toString
-@NoArgsConstructor       // Lombok: auto creates empty constructor
-@AllArgsConstructor      // Lombok: auto creates constructor with all fields
-@Entity                  // JPA: this class is a database table
-@Table(name = "users")   // JPA: table name in database
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name = "users")
 public class User {
 
-    @Id                                    // This is the primary key
-    @GeneratedValue(strategy = GenerationType.IDENTITY)  // Auto increment
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "full_name", nullable = false)
@@ -30,7 +30,7 @@ public class User {
     @Column(name = "phone")
     private String phone;
 
-    @Enumerated(EnumType.STRING)           // Save enum as text in DB
+    @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private Role role;
 
@@ -46,19 +46,34 @@ public class User {
     @Column(name = "is_active")
     private Boolean isActive = true;
 
+    @Column(name = "is_email_verified")
+    private Boolean isEmailVerified = false;
+
+    @Column(name = "email_verify_token")
+    private String emailVerifyToken;
+
+    @Column(name = "password_reset_token")
+    private String passwordResetToken;
+
+    @Column(name = "password_reset_expiry")
+    private LocalDateTime passwordResetExpiry;
+
+    @Column(name = "profile_image")
+    private String profileImage;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @PrePersist   // Runs automatically BEFORE saving to database
+    @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
 
-    @PreUpdate    // Runs automatically BEFORE updating in database
+    @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }

@@ -5,6 +5,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import java.security.Key;
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Component
@@ -16,17 +17,26 @@ public class JwtUtils {
     @Value("${jwt.expiration}")
     private long jwtExpiration;
 
-    // Generate a token for a user
+    @Value("${jwt.refresh-expiration}")
+    private long refreshExpiration;
+
     public String generateToken(String email) {
+        return buildToken(email, jwtExpiration);
+    }
+
+    public String generateRefreshToken(String email) {
+        return buildToken(email, refreshExpiration);
+    }
+
+    private String buildToken(String email, long expiry) {
         return Jwts.builder()
                 .setSubject(email)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .setExpiration(new Date(System.currentTimeMillis() + expiry))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // Get email from token
     public String getEmailFromToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
@@ -36,7 +46,6 @@ public class JwtUtils {
                 .getSubject();
     }
 
-    // Check if token is valid
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
@@ -51,5 +60,18 @@ public class JwtUtils {
 
     private Key getSigningKey() {
         return Keys.hmacShaKeyFor(jwtSecret.getBytes());
+    }
+    // Get expiry date from token
+    public LocalDateTime getExpiryFromToken(String token) {
+        Date expiry = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getExpiration();
+
+        return expiry.toInstant()
+                .atZone(java.time.ZoneId.systemDefault())
+                .toLocalDateTime();
     }
 }
