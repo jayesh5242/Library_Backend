@@ -1,11 +1,10 @@
 package com.example.Library_backend.controller;
 
-import com.example.Library_backend.dto.request.LoginRequest;
-import com.example.Library_backend.dto.request.RefreshTokenRequest;
-import com.example.Library_backend.dto.request.RegisterRequest;
+import com.example.Library_backend.dto.request.*;
 import com.example.Library_backend.dto.respose.ApiResponse;
 import com.example.Library_backend.dto.respose.AuthResponse;
 import com.example.Library_backend.dto.respose.RefreshTokenResponse;
+import com.example.Library_backend.dto.respose.UserProfileResponse;
 import com.example.Library_backend.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -58,5 +57,62 @@ public class AuthController {
         return ResponseEntity.ok(
                 ApiResponse.success(
                         "Token refreshed successfully!", response));
+    }
+
+    // ─── API 5: FORGOT PASSWORD ──────────────────────────────
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ApiResponse> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request) {
+
+        String message = authService.forgotPassword(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(message, null));
+    }
+
+    // ─── API 6: RESET PASSWORD ───────────────────────────────
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request) {
+
+        String message = authService.resetPassword(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(message, null));
+    }
+
+    // ─── API 7: GET PROFILE ──────────────────────────────────
+    @GetMapping("/profile")
+    public ResponseEntity<ApiResponse> getProfile() {
+
+        UserProfileResponse profile = authService.getProfile();
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Profile fetched successfully!", profile));
+    }
+
+    // ─── API 8: UPDATE PROFILE ───────────────────────────────
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse> updateProfile(
+            @RequestBody UpdateProfileRequest request) {
+
+        UserProfileResponse updated =
+                authService.updateProfile(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Profile updated successfully!", updated));
+    }
+
+    // ─── API 9: CHANGE PASSWORD ───────────────────────────────
+    @PutMapping("/change-password")
+    public ResponseEntity<ApiResponse> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request) {
+
+        String message = authService.changePassword(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(message, null));
     }
 }

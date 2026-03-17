@@ -1,10 +1,9 @@
 package com.example.Library_backend.service;
 
-import com.example.Library_backend.dto.request.LoginRequest;
-import com.example.Library_backend.dto.request.RefreshTokenRequest;
-import com.example.Library_backend.dto.request.RegisterRequest;
+import com.example.Library_backend.dto.request.*;
 import com.example.Library_backend.dto.respose.AuthResponse;
 import com.example.Library_backend.dto.respose.RefreshTokenResponse;
+import com.example.Library_backend.dto.respose.UserProfileResponse;
 import com.example.Library_backend.entity.TokenBlacklist;
 import com.example.Library_backend.entity.User;
 import com.example.Library_backend.enums.Role;
@@ -13,6 +12,7 @@ import com.example.Library_backend.repository.TokenBlacklistRepository;
 import com.example.Library_backend.repository.UserRepository;
 import com.example.Library_backend.util.JwtUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,18 +20,26 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
+
+    @Value("${app.reset-token-expiry-minutes}")
+    private int resetTokenExpiryMinutes;
+
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
     private final EmailService emailService;
-    private final AuthenticationManager authenticationManager; // ADD THIS
+    private final AuthenticationManager authenticationManager;
     private final TokenBlacklistRepository tokenBlacklistRepository;
+    private final CurrentUserService currentUserService;
+
     // ─── API 1: REGISTER ─────────────────────────────────────
     public String register(RegisterRequest request) {
 
@@ -215,5 +223,243 @@ public class AuthService {
                 "Bearer",
                 "Token refreshed successfully!"
         );
+    }
+
+    // ─── API 5: FORGOT PASSWORD ──────────────────────────────
+    public String forgotPassword(ForgotPasswordRequest request) {
+
+        // 1. Check if email exists in database
+        //    Note: We give same message whether email exists or not
+        //    This is a security best practice!
+        //    (prevents attackers from knowing which emails are registered)
+        User user = userRepository
+                .findByEmail(request.getEmail())
+                .orElse(null);
+
+        // 2. If user not found → still return success message
+        //    (don't reveal that email doesn't exist)
+        if (user == null) {
+            return "If this email is registered, "
+                    + "you will receive a reset link shortly.";
+        }
+
+        // 3. Check if account is active
+        if (!user.getIsActive()) {
+            throw new RuntimeException(
+                    "Your account has been blocked! "
+                            + "Contact the librarian.");
+        }
+
+        // 4. Generate a simple 6-digit reset token
+        //    Easy for user to type from email
+        String resetToken = generateSixDigitToken();
+
+        // 5. Set expiry time (60 minutes from now)
+        LocalDateTime expiryTime = LocalDateTime.now()
+                .plusMinutes(resetTokenExpiryMinutes);
+
+        // 6. Save reset token and expiry in database
+        user.setPasswordResetToken(resetToken);
+        user.setPasswordResetExpiry(expiryTime);
+        userRepository.save(user);
+
+        // 7. Send reset email
+        emailService.sendPasswordResetEmail(
+                user.getEmail(),
+                resetToken,
+                user.getFullName()
+        );
+
+        return "If this email is registered, "
+                + "you will receive a reset link shortly.";
+    }
+
+    // ─── Helper: Generate 6-digit token ─────────────────────
+    private String generateSixDigitToken() {
+        int token = (int)(Math.random() * 900000) + 100000;
+        return String.valueOf(token);
+    }
+
+    // ─── API 6: RESET PASSWORD ───────────────────────────────
+    public String resetPassword(ResetPasswordRequest request) {
+
+        // 1. Check new password matches confirm password
+        if (!request.getNewPassword()
+                .equals(request.getConfirmPassword())) {
+            throw new RuntimeException(
+                    "Passwords do not match!");
+        }
+
+        // 2. Find user by reset token
+        User user = userRepository
+                .findByPasswordResetToken(request.getResetToken())
+                .orElseThrow(() -> new RuntimeException(
+                        "Invalid reset token! "
+                                + "Please request a new one."));
+
+        // 3. Check if token is expired
+        if (user.getPasswordResetExpiry() == null
+                || LocalDateTime.now()
+                .isAfter(user.getPasswordResetExpiry())) {
+            // Clear expired token from database
+            user.setPasswordResetToken(null);
+            user.setPasswordResetExpiry(null);
+            userRepository.save(user);
+
+            throw new RuntimeException(
+                    "Reset token has expired! "
+                            + "Please request a new one.");
+        }
+
+        // 4. Check account is active
+        if (!user.getIsActive()) {
+            throw new RuntimeException(
+                    "Your account has been blocked!");
+        }
+
+        // 5. Encrypt and save new password
+        user.setPassword(
+                passwordEncoder.encode(request.getNewPassword()));
+
+        // 6. Clear reset token (one time use only!)
+        user.setPasswordResetToken(null);
+        user.setPasswordResetExpiry(null);
+
+        // 7. Save updated user
+        userRepository.save(user);
+
+        // 8. Send confirmation email
+        emailService.sendPasswordChangedEmail(
+                user.getEmail(),
+                user.getFullName()
+        );
+
+        return "Password reset successful! "
+                + "Please login with your new password.";
+    }
+
+    // ─── API 7: GET PROFILE ──────────────────────────────────
+    public UserProfileResponse getProfile() {
+
+        // 1. Get currently logged in user
+        User user = currentUserService.getCurrentUser();
+
+        // 2. Build profile response
+        UserProfileResponse profile = new UserProfileResponse();
+        profile.setId(user.getId());
+        profile.setFullName(user.getFullName());
+        profile.setEmail(user.getEmail());
+        profile.setPhone(user.getPhone());
+        profile.setRole(user.getRole().name());
+        profile.setDepartment(user.getDepartment());
+        profile.setEnrollmentNo(user.getEnrollmentNo());
+        profile.setEmployeeId(user.getEmployeeId());
+        profile.setProfileImage(user.getProfileImage());
+        profile.setIsActive(user.getIsActive());
+        profile.setIsEmailVerified(user.getIsEmailVerified());
+        profile.setCreatedAt(user.getCreatedAt());
+
+        // 3. Format member since date
+        //    Example: "January 2024"
+        if (user.getCreatedAt() != null) {
+            String memberSince = user.getCreatedAt()
+                    .format(DateTimeFormatter.ofPattern("MMMM yyyy"));
+            profile.setMemberSince(memberSince);
+        }
+
+        return profile;
+    }
+
+    // ─── API 8: UPDATE PROFILE ───────────────────────────────
+    public UserProfileResponse updateProfile(
+            UpdateProfileRequest request) {
+
+        // 1. Get currently logged in user
+        User user = currentUserService.getCurrentUser();
+
+        // 2. Update only fields that are provided
+        //    If field is null → keep existing value
+
+        if (request.getFullName() != null
+                && !request.getFullName().trim().isEmpty()) {
+            user.setFullName(request.getFullName().trim());
+        }
+
+        if (request.getPhone() != null
+                && !request.getPhone().trim().isEmpty()) {
+            user.setPhone(request.getPhone().trim());
+        }
+
+        if (request.getDepartment() != null
+                && !request.getDepartment().trim().isEmpty()) {
+            user.setDepartment(request.getDepartment().trim());
+        }
+
+        if (request.getProfileImage() != null
+                && !request.getProfileImage().trim().isEmpty()) {
+            user.setProfileImage(request.getProfileImage().trim());
+        }
+
+        if (request.getEnrollmentNo() != null
+                && !request.getEnrollmentNo().trim().isEmpty()) {
+            user.setEnrollmentNo(request.getEnrollmentNo().trim());
+        }
+
+        if (request.getEmployeeId() != null
+                && !request.getEmployeeId().trim().isEmpty()) {
+            user.setEmployeeId(request.getEmployeeId().trim());
+        }
+
+        // 3. Save updated user to database
+        userRepository.save(user);
+
+        // 4. Return updated profile
+        //    Reuse getProfile() logic
+        return getProfile();
+    }
+
+    // ─── API 9: CHANGE PASSWORD ───────────────────────────────
+    public String changePassword(ChangePasswordRequest request) {
+
+        // 1. Get current logged-in user
+        User user = currentUserService.getCurrentUser();
+
+        // 2. Check old password
+        if (!passwordEncoder.matches(
+                request.getOldPassword(),
+                user.getPassword())) {
+
+            throw new RuntimeException("Old password is incorrect!");
+        }
+
+        // 3. Check new password == confirm password
+        if (!request.getNewPassword()
+                .equals(request.getConfirmPassword())) {
+
+            throw new RuntimeException("New password and confirm password do not match!");
+        }
+
+        // 4. Prevent same password reuse
+        if (passwordEncoder.matches(
+                request.getNewPassword(),
+                user.getPassword())) {
+
+            throw new RuntimeException("New password cannot be same as old password!");
+        }
+
+        // 5. Encode and set new password
+        user.setPassword(
+                passwordEncoder.encode(request.getNewPassword()));
+
+        // 6. Save updated user
+        userRepository.save(user);
+
+        // 7. Send confirmation email (optional but industry-level)
+        emailService.sendPasswordChangedEmail(
+                user.getEmail(),
+                user.getFullName()
+        );
+
+        return "Password changed successfully!";
     }
 }
