@@ -462,4 +462,5 @@ public class AuthService {
 
         return "Password changed successfully!";
     }
+
 }
