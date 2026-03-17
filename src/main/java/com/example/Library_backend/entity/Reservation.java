@@ -4,6 +4,7 @@ package com.example.Library_backend.entity;
 
 import com.example.Library_backend.enums.ReservationStatus;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Entity
 @Table(name = "reservations")
+@Builder
 public class Reservation {
 
     @Id

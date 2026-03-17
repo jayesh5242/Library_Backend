@@ -1,16 +1,18 @@
 package com.example.Library_backend.dto.respose;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ApiResponse {
+@Builder
+public class ApiResponse<T> {
     private boolean success;
     private String message;
-    private Object data;
+    private T data;
 
     public static ApiResponse success(String message, Object data) {
         return new ApiResponse(true, message, data);

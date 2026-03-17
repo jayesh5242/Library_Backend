@@ -2,11 +2,12 @@ package com.example.Library_backend.entity;
 
 
 
+import com.example.Library_backend.enums.TransactionStatus;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Entity
 @Table(name = "borrow_transactions")
+@Builder
 public class BorrowTransaction {
 
     @Id

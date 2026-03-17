@@ -53,6 +53,9 @@ public class Book {
     @Column(name = "total_pages")
     private Integer totalPages;
 
+    @Column(name = "available")
+    private Boolean available = true;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
