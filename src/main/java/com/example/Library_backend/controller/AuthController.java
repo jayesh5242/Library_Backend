@@ -105,12 +105,26 @@ public class AuthController {
                         "Profile updated successfully!", updated));
     }
 
-    // ─── API 9: CHANGE PASSWORD ───────────────────────────────
+    // ─── API 9: CHANGE PASSWORD ──────────────────────────────
     @PutMapping("/change-password")
     public ResponseEntity<ApiResponse> changePassword(
-            @Valid @RequestBody ChangePasswordRequest request) {
+            @Valid @RequestBody ChangePasswordRequest request,
+            @RequestHeader("Authorization") String authHeader) {
 
-        String message = authService.changePassword(request);
+        String message = authService.changePassword(
+                request, authHeader);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(message, null));
+    }
+
+
+    // ─── API 10: VERIFY EMAIL ────────────────────────────────
+    @GetMapping("/verify-email/{token}")
+    public ResponseEntity<ApiResponse> verifyEmail(
+            @PathVariable String token) {
+
+        String message = authService.verifyEmail(token);
 
         return ResponseEntity.ok(
                 ApiResponse.success(message, null));

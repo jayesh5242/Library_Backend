@@ -90,4 +90,46 @@ public class EmailService {
 
         sendEmail(toEmail, subject, body);
     }
+
+    // ─── Send welcome email after verification ───────────────
+    public void sendWelcomeEmail(String toEmail,
+                                 String fullName,
+                                 String role) {
+        String subject = "Welcome to College Library! 📚";
+
+        // Different message based on role
+        String roleMessage = "";
+        switch (role) {
+            case "STUDENT":
+                roleMessage =
+                        "You can now search books, make reservations,\n"
+                                + "and manage your borrowings online.";
+                break;
+            case "FACULTY":
+                roleMessage =
+                        "You can now access extended borrowing limits,\n"
+                                + "create reading lists, and request book purchases.";
+                break;
+            case "LIBRARIAN":
+                roleMessage =
+                        "You can now manage book inventory,\n"
+                                + "issue/return books, and handle reservations.";
+                break;
+            default:
+                roleMessage =
+                        "You now have full access to the library system.";
+        }
+
+        String body =
+                "Hello " + fullName + "! 👋\n\n"
+                        + "Welcome to College Library Network!\n\n"
+                        + "Your email has been verified successfully.\n\n"
+                        + "Your Role: " + role + "\n\n"
+                        + roleMessage + "\n\n"
+                        + "Login here: http://localhost:3000/login\n\n"
+                        + "Happy Reading! 📖\n\n"
+                        + "College Library Team";
+
+        sendEmail(toEmail, subject, body);
+    }
 }

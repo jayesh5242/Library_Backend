@@ -418,49 +418,112 @@ public class AuthService {
         return getProfile();
     }
 
-    // ─── API 9: CHANGE PASSWORD ───────────────────────────────
-    public String changePassword(ChangePasswordRequest request) {
+    // ─── API 9: CHANGE PASSWORD ──────────────────────────────
+    public String changePassword(
+            ChangePasswordRequest request,
+            String authHeader) {
 
-        // 1. Get current logged-in user
+        // 1. Get currently logged in user
         User user = currentUserService.getCurrentUser();
 
-        // 2. Check old password
+        // 2. Verify current password is correct
         if (!passwordEncoder.matches(
-                request.getOldPassword(),
+                request.getCurrentPassword(),
                 user.getPassword())) {
-
-            throw new RuntimeException("Old password is incorrect!");
+            throw new RuntimeException(
+                    "Current password is incorrect!");
         }
 
-        // 3. Check new password == confirm password
+        // 3. Check new password matches confirm password
         if (!request.getNewPassword()
                 .equals(request.getConfirmPassword())) {
-
-            throw new RuntimeException("New password and confirm password do not match!");
+            throw new RuntimeException(
+                    "New passwords do not match!");
         }
 
-        // 4. Prevent same password reuse
+        // 4. Check new password is different from current
         if (passwordEncoder.matches(
                 request.getNewPassword(),
                 user.getPassword())) {
-
-            throw new RuntimeException("New password cannot be same as old password!");
+            throw new RuntimeException(
+                    "New password must be different "
+                            + "from current password!");
         }
 
-        // 5. Encode and set new password
+        // 5. Encrypt and save new password
         user.setPassword(
                 passwordEncoder.encode(request.getNewPassword()));
-
-        // 6. Save updated user
         userRepository.save(user);
 
-        // 7. Send confirmation email (optional but industry-level)
+        // 6. Blacklist current token
+        //    Force user to login again with new password
+        if (authHeader != null
+                && authHeader.startsWith("Bearer ")) {
+
+            String token = authHeader.substring(7);
+
+            if (!tokenBlacklistRepository.existsByToken(token)) {
+                TokenBlacklist blacklisted = new TokenBlacklist();
+                blacklisted.setToken(token);
+                blacklisted.setEmail(user.getEmail());
+                blacklisted.setTokenExpiry(
+                        jwtUtils.getExpiryFromToken(token));
+                tokenBlacklistRepository.save(blacklisted);
+            }
+        }
+
+        // 7. Send confirmation email
         emailService.sendPasswordChangedEmail(
                 user.getEmail(),
                 user.getFullName()
         );
 
-        return "Password changed successfully!";
+        return "Password changed successfully! "
+                + "Please login with your new password.";
+    }
+    // ─── API 10: VERIFY EMAIL ────────────────────────────────
+    public String verifyEmail(String token) {
+
+        // 1. Find user by verification token
+        User user = userRepository
+                .findByEmailVerifyToken(token)
+                .orElseThrow(() -> new RuntimeException(
+                        "Invalid verification link! "
+                                + "Please register again."));
+
+        // 2. Check if already verified
+        if (user.getIsEmailVerified()) {
+            return "Email is already verified! "
+                    + "You can login now.";
+        }
+
+        // 3. Check if account is active
+        if (!user.getIsActive()) {
+            throw new RuntimeException(
+                    "Your account has been blocked! "
+                            + "Contact the librarian.");
+        }
+
+        // 4. Mark email as verified
+        user.setIsEmailVerified(true);
+
+        // 5. Clear verification token
+        //    (one time use only!)
+        user.setEmailVerifyToken(null);
+
+        // 6. Save updated user
+        userRepository.save(user);
+
+        // 7. Send welcome email
+        emailService.sendWelcomeEmail(
+                user.getEmail(),
+                user.getFullName(),
+                user.getRole().name()
+        );
+
+        return "Email verified successfully! "
+                + "Welcome to College Library, "
+                + user.getFullName() + "!";
     }
 
 }
