@@ -3,20 +3,17 @@ package com.example.Library_backend.service;
 import com.example.Library_backend.dto.request.RegisterRequest;
 import com.example.Library_backend.dto.request.UpdateUserRequest;
 import com.example.Library_backend.dto.respose.PagedResponse;
-import com.example.Library_backend.dto.respose.UserResponse;
+import com.example.Library_backend.dto.response.UserResponse;
 import com.example.Library_backend.entity.User;
 import com.example.Library_backend.enums.Role;
 import com.example.Library_backend.exception.ResourceNotFoundException;
 import com.example.Library_backend.repository.UserRepository;
-import com.example.Library_backend.service.CurrentUserService;
-import com.example.Library_backend.service.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service

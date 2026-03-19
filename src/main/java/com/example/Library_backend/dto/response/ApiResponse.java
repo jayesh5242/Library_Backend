@@ -1,4 +1,4 @@
-package com.example.Library_backend.dto.respose;
+package com.example.Library_backend.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

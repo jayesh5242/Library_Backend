@@ -2,7 +2,7 @@ package com.example.Library_backend.controller;
 
 import com.example.Library_backend.dto.request.CreateReservationRequest;
 import com.example.Library_backend.dto.respose.ApiResponse;
-import com.example.Library_backend.dto.respose.ReservationResponse;
+import com.example.Library_backend.dto.response.ReservationResponse;
 import com.example.Library_backend.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

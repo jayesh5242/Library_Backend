@@ -4,7 +4,7 @@ import com.example.Library_backend.dto.request.RegisterRequest;
 import com.example.Library_backend.dto.request.UpdateUserRequest;
 import com.example.Library_backend.dto.respose.ApiResponse;
 import com.example.Library_backend.dto.respose.PagedResponse;
-import com.example.Library_backend.dto.respose.UserResponse;
+import com.example.Library_backend.dto.response.UserResponse;
 import com.example.Library_backend.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

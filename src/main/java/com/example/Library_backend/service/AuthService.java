@@ -1,9 +1,9 @@
 package com.example.Library_backend.service;
 
 import com.example.Library_backend.dto.request.*;
-import com.example.Library_backend.dto.respose.AuthResponse;
-import com.example.Library_backend.dto.respose.RefreshTokenResponse;
-import com.example.Library_backend.dto.respose.UserProfileResponse;
+import com.example.Library_backend.dto.response.AuthResponse;
+import com.example.Library_backend.dto.response.RefreshTokenResponse;
+import com.example.Library_backend.dto.response.UserProfileResponse;
 import com.example.Library_backend.entity.TokenBlacklist;
 import com.example.Library_backend.entity.User;
 import com.example.Library_backend.enums.Role;
