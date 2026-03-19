@@ -2,7 +2,7 @@ package com.example.Library_backend.service;
 
 import com.example.Library_backend.dto.request.RegisterRequest;
 import com.example.Library_backend.dto.request.UpdateUserRequest;
-import com.example.Library_backend.dto.respose.PagedResponse;
+import com.example.Library_backend.dto.response.PagedResponse;
 import com.example.Library_backend.dto.response.UserResponse;
 import com.example.Library_backend.entity.User;
 import com.example.Library_backend.enums.Role;

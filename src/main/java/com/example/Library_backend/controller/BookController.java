@@ -35,7 +35,7 @@ public class BookController {
     public ResponseEntity<ApiResponse<PagedResponse<BookResponse>>> getAllBooks(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "created_at") String sortBy,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir,
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String author,

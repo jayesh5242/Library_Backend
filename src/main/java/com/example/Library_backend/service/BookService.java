@@ -333,7 +333,7 @@ public class BookService {
 
 
     // ── shared helpers (used by all Book service methods) ─────
- 
+
     protected BookResponse mapToResponse(Book book) {
         BookResponse res = new BookResponse();
         res.setId(book.getId());
@@ -351,48 +351,26 @@ public class BookService {
         res.setTotalPages(book.getTotalPages());
         res.setCreatedAt(book.getCreatedAt());
 
-//        if (book.getInventories() != null) {
-//            res.setTotalCopies(book.getInventories().stream()
-//                    .mapToInt(BookInventory::getTotalCopies).sum());
-//            res.setAvailableCopies(book.getInventories().stream()
-//                    .mapToInt(BookInventory::getAvailableCopies).sum());
-//        }
-//
-//        if (book.getReviews() != null && !book.getReviews().isEmpty()) {
-//            double avg = book.getReviews().stream()
-//                    .mapToInt(BookReview::getRating).average().orElse(0.0);
-//            res.setAverageRating(Math.round(avg * 10.0) / 10.0);
-//            res.setReviewCount(book.getReviews().size());
-//        }
+        if (book.getInventories() != null) {
+            res.setTotalCopies(book.getInventories().stream()
+                    .mapToInt(BookInventory::getTotalCopies).sum());
+            res.setAvailableCopies(book.getInventories().stream()
+                    .mapToInt(BookInventory::getAvailableCopies).sum());
+        }
+
+        if (book.getReviews() != null && !book.getReviews().isEmpty()) {
+            double avg = book.getReviews().stream()
+                    .mapToInt(BookReview::getRating).average().orElse(0.0);
+            res.setAverageRating(Math.round(avg * 10.0) / 10.0);
+            res.setReviewCount(book.getReviews().size());
+        }
 
         return res;
     }
-
     public PagedResponse<BookResponse> searchBooks(String q, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Book> books = bookRepository.searchBooks(q, pageable);
         return buildPagedResponse(books);
-    }
-
-
-    protected String blankToNull(String val) {
-        return (val == null || val.isBlank()) ? null : val;
-    }
-
-    public PagedResponse<BookResponse> buildPagedResponse(Page<Book> page) {
-        List<BookResponse> content = page.getContent()
-                .stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
-
-        return PagedResponse.<BookResponse>builder()
-                .content(content)
-                .page(page.getNumber())
-                .size(page.getSize())
-                .totalElements(page.getTotalElements())
-                .totalPages(page.getTotalPages())
-                .last(page.isLast())
-                .build();
     }
 
     public BookReviewResponse mapToReviewResponse(BookReview review) {
@@ -436,8 +414,22 @@ public class BookService {
         // Step 3: Save and return
         return mapToResponse(bookRepository.save(book));
     }
+    protected PagedResponse<BookResponse> buildPagedResponse(Page<Book> page) {
+        List<BookResponse> content = page.getContent()
+                .stream().map(this::mapToResponse).collect(Collectors.toList());
+        return PagedResponse.<BookResponse>builder()
+                .content(content)
+                .pageNumber(page.getNumber())
+                .pageSize(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .lastPage(page.isLast())
+                .build();
+    }
 
-
-
+    protected String blankToNull(String val) {
+        return (val == null || val.isBlank()) ? null : val;
+    }
 }
+
  

@@ -1,14 +1,17 @@
 package com.example.Library_backend.entity;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Entity
 @Table(name = "books")
 public class Book {
@@ -63,4 +66,12 @@ public class Book {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
     }
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<BookInventory> inventories;
+
+    @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<BookReview> reviews;
+
+    @OneToMany(mappedBy = "book", fetch = FetchType.LAZY)
+    private List<BorrowTransaction> borrowTransactions;
 }
