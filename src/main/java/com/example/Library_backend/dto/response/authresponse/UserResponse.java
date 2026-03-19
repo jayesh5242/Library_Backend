@@ -1,4 +1,4 @@
-package com.example.Library_backend.dto.response;
+package com.example.Library_backend.dto.response.authresponse;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -30,4 +30,11 @@ public class UserResponse {
     private Integer activeBorrowings;
     private Double totalFinesPaid;
     private Double pendingFines;
+
+    // Add these fields at the bottom of UserResponse
+
+    // Branch info (only for LIBRARIAN role)
+    private Long branchId;
+    private String branchName;
+    private String branchDepartment;
 }

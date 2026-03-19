@@ -1,4 +1,4 @@
-package com.example.Library_backend.dto.request;
+package com.example.Library_backend.dto.request.authrequest;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

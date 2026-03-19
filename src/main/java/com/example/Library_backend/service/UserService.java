@@ -1,9 +1,10 @@
 package com.example.Library_backend.service;
 
-import com.example.Library_backend.dto.request.RegisterRequest;
-import com.example.Library_backend.dto.request.UpdateUserRequest;
+
+import com.example.Library_backend.dto.request.authrequest.RegisterRequest;
+import com.example.Library_backend.dto.request.authrequest.UpdateUserRequest;
 import com.example.Library_backend.dto.response.PagedResponse;
-import com.example.Library_backend.dto.response.UserResponse;
+import com.example.Library_backend.dto.response.authresponse.UserResponse;
 import com.example.Library_backend.entity.User;
 import com.example.Library_backend.enums.Role;
 import com.example.Library_backend.exception.ResourceNotFoundException;
@@ -49,6 +50,14 @@ public class UserService {
                             DateTimeFormatter.ofPattern("MMMM yyyy")));
         }
 
+        if (user.getBranch() != null) {
+            response.setBranchId(
+                    user.getBranch().getId());
+            response.setBranchName(
+                    user.getBranch().getName());
+            response.setBranchDepartment(
+                    user.getBranch().getDepartment());
+        }
         return response;
     }
 
