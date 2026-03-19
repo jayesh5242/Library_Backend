@@ -13,7 +13,7 @@ public class NotificationTestHelper {
     private final NotificationService notificationService;
     private final UserRepository userRepository;
 
-    // Call this method from Postman via a
+
     // temporary test endpoint to seed data
     public String createTestNotifications(String email) {
 

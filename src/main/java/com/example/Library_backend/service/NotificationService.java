@@ -93,8 +93,7 @@ public class NotificationService {
         }
     }
 
-    // ─── Core method: Create & save a notification ────
-    // ⭐ YOUR TEAMMATES WILL CALL THIS METHOD!
+
     public Notification createNotification(
             User user,
             String title,
@@ -131,9 +130,6 @@ public class NotificationService {
         );
     }
 
-    // ═══════════════════════════════════════════════════
-    // API METHODS
-    // ═══════════════════════════════════════════════════
 
     // ─── API 1: GET MY NOTIFICATIONS ──────────────────
     public PagedResponse<NotificationResponse>
@@ -147,8 +143,8 @@ public class NotificationService {
         // Get notifications newest first
         Page<Notification> notifPage =
                 notificationRepository
-                        .findByUserOrderByCreatedAtDesc(
-                                user, pageable);
+                        .findByUserIdOrderByCreatedAtDesc(
+                                user.getId(), pageable);
 
         List<NotificationResponse> notifications =
                 notifPage.getContent()
@@ -201,7 +197,7 @@ public class NotificationService {
 
         // Count unread before marking
         long unreadCount = notificationRepository
-                .countByUserAndIsRead(user, false);
+                .countByUserAndIsReadNative(user.getId(), false);
 
         if (unreadCount == 0) {
             return "No unread notifications found!";
@@ -209,7 +205,7 @@ public class NotificationService {
 
         // Mark all as read in one DB query
         int updated = notificationRepository
-                .markAllAsRead(user);
+                .markAllAsRead(user.getId());
 
         return updated + " notifications marked as read!";
     }
@@ -243,7 +239,7 @@ public class NotificationService {
         User user = currentUserService.getCurrentUser();
 
         return notificationRepository
-                .countByUserAndIsRead(user, false);
+                .countByUserAndIsReadNative(user.getId(), false);
     }
 
     // ─── API 6: BROADCAST TO ALL USERS ───────────────

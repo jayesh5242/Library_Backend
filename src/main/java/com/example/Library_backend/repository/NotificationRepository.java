@@ -15,21 +15,52 @@ import org.springframework.transaction.annotation.Transactional;
 public interface NotificationRepository
         extends JpaRepository<Notification, Long> {
 
-    // Get all notifications for a user
-    // (newest first)
-    Page<Notification> findByUserOrderByCreatedAtDesc(
-            User user, Pageable pageable);
+    @Query(
+            value = """
+        SELECT *
+        FROM notifications
+        WHERE user_id = :userId
+        ORDER BY created_at DESC
+        """,
+            countQuery = """
+        SELECT COUNT(*)
+        FROM notifications
+        WHERE user_id = :userId
+        """,
+            nativeQuery = true
+    )
+    Page<Notification> findByUserIdOrderByCreatedAtDesc(
+            @Param("userId") Long userId,
+            Pageable pageable
+    );
 
-    // Count unread notifications for a user
-    long countByUserAndIsRead(User user, Boolean isRead);
+    @Query(
+            value = """
+        SELECT COUNT(*)
+        FROM notifications
+        WHERE user_id = :userId
+          AND is_read = :isRead
+        """,
+            nativeQuery = true
+    )
+    long countByUserAndIsReadNative(
+            @Param("userId") Long userId,
+            @Param("isRead") Boolean isRead
+    );
 
     // Mark ALL notifications as read for a user
     @Modifying
     @Transactional
-    @Query("UPDATE Notification n SET n.isRead = true " +
-            "WHERE n.user = :user AND n.isRead = false")
-    int markAllAsRead(@Param("user") User user);
-
+    @Query(
+            value = """
+        UPDATE notifications
+        SET is_read = true
+        WHERE user_id = :userId
+          AND is_read = false
+        """,
+            nativeQuery = true
+    )
+    int markAllAsRead(@Param("userId") Long userId);
     // Delete all read notifications for a user
     // (cleanup old notifications)
     @Modifying
