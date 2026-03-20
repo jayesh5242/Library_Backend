@@ -36,4 +36,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     Page<Reservation> findPendingByBranch(@Param("branchId") Long branchId, Pageable pageable);
 
     Page<Reservation> findByBookId(Long bookId, Pageable pageable);
+
+
+    @Query(value = "SELECT COUNT(*) FROM reservations WHERE status = :status", nativeQuery = true)
+    long countByStatus(@Param("status") String status);
 }

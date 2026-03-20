@@ -2,7 +2,7 @@ package com.example.Library_backend.controller;
 
 import com.example.Library_backend.dto.request.notificationrequest.SendNotificationRequest;
 import com.example.Library_backend.dto.response.ApiResponse;
-import com.example.Library_backend.dto.response.PagedResponse;
+import com.example.Library_backend.dto.response.authresponse.PagedResponse;
 import com.example.Library_backend.dto.response.notificationresponse.NotificationResponse;
 import com.example.Library_backend.service.NotificationService;
 import com.example.Library_backend.service.NotificationTestHelper;

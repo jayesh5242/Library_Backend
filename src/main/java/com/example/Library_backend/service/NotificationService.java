@@ -1,7 +1,7 @@
 package com.example.Library_backend.service;
 
 import com.example.Library_backend.dto.request.notificationrequest.SendNotificationRequest;
-import com.example.Library_backend.dto.response.PagedResponse;
+import com.example.Library_backend.dto.response.authresponse.PagedResponse;
 import com.example.Library_backend.dto.response.notificationresponse.NotificationResponse;
 import com.example.Library_backend.entity.Notification;
 import com.example.Library_backend.entity.User;
