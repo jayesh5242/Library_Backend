@@ -6,6 +6,7 @@ import com.example.Library_backend.dto.response.ApiResponse;
 import com.example.Library_backend.dto.response.BorrowResponse;
 
 import com.example.Library_backend.service.BorrowTransactionService;
+import com.example.Library_backend.service.CurrentUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,9 +19,10 @@ import org.springframework.web.bind.annotation.*;
 public class BorrowTransactionController {
 
     private final BorrowTransactionService borrowService;
+    private final CurrentUserService currentUserService;
 
     @PostMapping("/issue")
-    public ResponseEntity<ApiResponse<BorrowResponse>> issueBook(@RequestBody IssueBookRequest request) {
+    public ResponseEntity<ApiResponse<?>> issueBook(@RequestBody IssueBookRequest request) {
         try {
             return ResponseEntity.ok(borrowService.issueBook(request));
         } catch (Exception e) {
@@ -60,7 +62,7 @@ public class BorrowTransactionController {
     @GetMapping("/my")
     public ResponseEntity<ApiResponse<Page<BorrowResponse>>> getMyBorrowedBooks(@RequestHeader("Authorization") String authToken, Pageable pageable) {
         try {
-            Long userId = 1L;
+            Long userId = currentUserService.getCurrentUserId();
             return ResponseEntity.ok(borrowService.getMyBorrowedBooks(pageable,userId));
         } catch (Exception e) {
             return ResponseEntity.ok(ApiResponse.<Page<BorrowResponse>>builder()
@@ -74,7 +76,7 @@ public class BorrowTransactionController {
     @GetMapping("/my/history")
     public ResponseEntity<ApiResponse<Page<BorrowResponse>>> getMyBorrowHistory(Pageable pageable) {
         try {
-            Long userId = 1L;
+            Long userId = currentUserService.getCurrentUserId();
             return ResponseEntity.ok(borrowService.getMyBorrowHistory(pageable,userId));
         } catch (Exception e) {
             return ResponseEntity.ok(ApiResponse.<Page<BorrowResponse>>builder()

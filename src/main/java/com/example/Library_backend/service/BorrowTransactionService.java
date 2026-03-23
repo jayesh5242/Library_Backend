@@ -22,32 +22,41 @@ public class BorrowTransactionService {
     private final BookRepository bookRepo;
     private final UserRepository userRepo;
 
-    public ApiResponse<BorrowResponse> issueBook(IssueBookRequest request) {
+    public ApiResponse<?> issueBook(IssueBookRequest request) {
         try{
-        Book book = bookRepo.findById(request.getBookId())
-                .orElseThrow(() -> new RuntimeException("Book not found"));
 
-        User user = userRepo.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+            if (!bookRepo.existsById(request.getBookId())) {
+                return new ApiResponse<>(false, "Book not found", null);
+            }
+            if (!userRepo.existsById(request.getUserId())) {
+                return new ApiResponse<>(false, "User not found", null);
+            }
+            Book book = bookRepo.findById(request.getBookId()).get();
 
-        if (!book.getAvailable()) {
-            throw new RuntimeException("Book not available");
-        }
+            User user = userRepo.findById(request.getUserId()).get();
+            if (book.getAvailable()) {
+                BorrowTransaction txn = BorrowTransaction.builder()
+                        .book(book)
+                        .user(user)
+                        .issueDate(LocalDate.now())
+                        .dueDate(LocalDate.now().plusDays(14))
+                        .status(TransactionStatus.BORROWED)
+                        .branch(user.getBranch())
+                        .build();
 
-        BorrowTransaction txn = BorrowTransaction.builder()
-                .book(book)
-                .user(user)
-                .issueDate(LocalDate.now())
-                .dueDate(LocalDate.now().plusDays(14))
-                .status(TransactionStatus.BORROWED)
-                .build();
+                book.setAvailable(false);
 
-        book.setAvailable(false);
+                borrowRepo.save(txn);
+                bookRepo.save(book);
 
-        borrowRepo.save(txn);
-        bookRepo.save(book);
-
-            return new ApiResponse<>(true, "Book issued successfully", mapToResponse(txn));
+                return new ApiResponse<>(true, "Book issued successfully", mapToResponse(txn));
+            }else{
+                return new ApiResponse<>(
+                        false,
+                        "Book not available",
+                        null
+                );
+            }
         } catch (Exception e) {
 
             e.printStackTrace();
@@ -62,8 +71,16 @@ public class BorrowTransactionService {
     // ---------------- RETURN BOOK ----------------
     public ApiResponse<BorrowResponse> returnBook(ReturnBookRequest request) {
         try {
-            BorrowTransaction txn = borrowRepo.findById(request.getTransactionId())
-                    .orElseThrow(() -> new RuntimeException("Transaction not found"));
+
+            if (!borrowRepo.existsById(request.getTransactionId())) {
+                return new ApiResponse<>(false, "Transaction not found", null);
+            }
+
+            BorrowTransaction txn = borrowRepo.findById(request.getTransactionId()).get();
+
+            if (txn.getStatus() != TransactionStatus.BORROWED) {
+                return new ApiResponse<>(false, "Book is not in borrowed state", null);
+            }
 
             txn.setReturnDate(LocalDate.now());
             txn.setStatus(TransactionStatus.RETURNED);
@@ -85,11 +102,15 @@ public class BorrowTransactionService {
     // ---------------- RENEW BOOK ----------------
     public ApiResponse<BorrowResponse> renewBook(Long id) {
         try {
-            BorrowTransaction txn = borrowRepo.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Transaction not found"));
+
+            if (!borrowRepo.existsById(id)) {
+                return new ApiResponse<>(false, "Transaction not found", null);
+            }
+
+            BorrowTransaction txn = borrowRepo.findById(id).get();
 
             if (txn.getStatus() != TransactionStatus.BORROWED) {
-                throw new RuntimeException("Only borrowed books can be renewed");
+                return new ApiResponse<>(false, "Only borrowed books can be renewed", null);
             }
 
             txn.setDueDate(txn.getDueDate().plusDays(7));
@@ -183,8 +204,12 @@ public class BorrowTransactionService {
     // ---------------- GET BY ID ----------------
     public ApiResponse<BorrowResponse> getTransactionById(Long id) {
         try {
-            BorrowTransaction txn = borrowRepo.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Transaction not found"));
+
+            if (!borrowRepo.existsById(id)) {
+                return new ApiResponse<>(false, "Transaction not found", null);
+            }
+
+            BorrowTransaction txn = borrowRepo.findById(id).get();
 
             return new ApiResponse<>(true, "Fetched transaction successfully", mapToResponse(txn));
 
@@ -197,8 +222,16 @@ public class BorrowTransactionService {
     // ---------------- MARK AS LOST ----------------
     public ApiResponse<BorrowResponse> markAsLost(Long id) {
         try {
-            BorrowTransaction txn = borrowRepo.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Transaction not found"));
+
+            if (!borrowRepo.existsById(id)) {
+                return new ApiResponse<>(false, "Transaction not found", null);
+            }
+
+            BorrowTransaction txn = borrowRepo.findById(id).get();
+
+            if (txn.getStatus() == TransactionStatus.RETURNED) {
+                return new ApiResponse<>(false, "Returned book cannot be marked as lost", null);
+            }
 
             txn.setStatus(TransactionStatus.LOST);
 

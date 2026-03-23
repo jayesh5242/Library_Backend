@@ -3,6 +3,7 @@ package com.example.Library_backend.controller;
 import com.example.Library_backend.dto.request.CreateReservationRequest;
 import com.example.Library_backend.dto.response.ApiResponse;
 import com.example.Library_backend.dto.response.ReservationResponse;
+import com.example.Library_backend.service.CurrentUserService;
 import com.example.Library_backend.service.ReservationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 public class ReservationController {
 
     private final ReservationService reservationService;
+    private final CurrentUserService currentUserService;
 
     @PostMapping
     public ResponseEntity<ApiResponse<ReservationResponse>> create(@RequestBody CreateReservationRequest request) {
@@ -29,7 +31,7 @@ public class ReservationController {
     @GetMapping("/my")
     public ResponseEntity<ApiResponse<Page<ReservationResponse>>> my(Pageable pageable) {
         try {
-            Long userId = 1L;
+            Long userId = currentUserService.getCurrentUserId();
             return ResponseEntity.ok(reservationService.getMyReservations(pageable,userId));
         } catch (Exception e) {
             return ResponseEntity.ok(new ApiResponse<>(false, "Failed to fetch reservations", null));
