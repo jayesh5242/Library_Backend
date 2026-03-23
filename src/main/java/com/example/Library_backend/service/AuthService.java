@@ -84,7 +84,7 @@ public class AuthService {
 
 
         // ── Assign branch if branchId provided ────────────
-// Only for LIBRARIAN role
+                    // Only for LIBRARIAN role
         if (request.getBranchId() != null) {
 
             // Only librarians can be assigned to a branch
