@@ -62,7 +62,7 @@ public class BorrowTransactionController {
     @GetMapping("/my")
     public ResponseEntity<ApiResponse<Page<BorrowResponse>>> getMyBorrowedBooks(@RequestHeader("Authorization") String authToken, Pageable pageable) {
         try {
-            Long userId = currentUserService.getCurrentUserId();
+            Long userId = 1L;
             return ResponseEntity.ok(borrowService.getMyBorrowedBooks(pageable,userId));
         } catch (Exception e) {
             return ResponseEntity.ok(ApiResponse.<Page<BorrowResponse>>builder()
