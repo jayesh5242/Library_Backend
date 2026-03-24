@@ -23,8 +23,8 @@ public interface BookInventoryRepository extends JpaRepository<BookInventory, Lo
     // Get all inventory in a branch (no pagination)
     List<BookInventory> findByBranchId(Long branchId);
 
-    // Find specific book in specific branch
-    Optional<BookInventory> findByBookIdAndBranchId(Long bookId, Long branchId);
+//    // Find specific book in specific branch
+//    Optional<BookInventory> findByBookIdAndBranchId(Long bookId, Long branchId);
 
     // Check duplicate — one record per book per branch
     boolean existsByBookIdAndBranchId(Long bookId, Long branchId);
@@ -52,4 +52,31 @@ public interface BookInventoryRepository extends JpaRepository<BookInventory, Lo
             "WHERE i.available_copies = 0",
             nativeQuery = true)
     List<BookInventory> findAllOutOfStock();
+
+
+
+    // ✅ 1. Get inventory for a branch
+    @Query(value = "SELECT * FROM book_inventory WHERE branch_id = :branchId", nativeQuery = true)
+    List<BookInventory> findByBranch(@Param("branchId") Long branchId);
+
+
+    // ✅ 2. Find specific book in specific branch
+    @Query(value = "SELECT * FROM book_inventory WHERE book_id = :bookId AND branch_id = :branchId", nativeQuery = true)
+    Optional<BookInventory> findByBookIdAndBranchId(@Param("bookId") Long bookId,
+                                                    @Param("branchId") Long branchId);
+
+
+    // ✅ 3. Count total books in system
+    @Query(value = "SELECT COALESCE(SUM(total_copies), 0) FROM book_inventory", nativeQuery = true)
+    Long getTotalBooks();
+
+
+    // ✅ 4. Count available books
+    @Query(value = "SELECT COALESCE(SUM(available_copies), 0) FROM book_inventory", nativeQuery = true)
+    Long getTotalAvailableBooks();
+
+
+    // ✅ 5. Get out of stock books
+    @Query(value = "SELECT * FROM book_inventory WHERE available_copies = 0", nativeQuery = true)
+    List<BookInventory> getOutOfStockBooks();
 }

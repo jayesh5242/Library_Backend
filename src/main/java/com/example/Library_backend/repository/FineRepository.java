@@ -92,10 +92,44 @@ public interface FineRepository extends JpaRepository<Fine, Long> {
             nativeQuery = true)
     Double sumCollectedFinesByBranchId(@Param("branchId") Long branchId);
 
-    // ─────────────────────────────────────────────────────────
-    // Used in: FineCalculationScheduler — find fine by transaction
-    // ─────────────────────────────────────────────────────────
-    Optional<Fine> findByTransactionId(Long transactionId);
+    // ✅ 1. Find fine by transaction
+    @Query(value = "SELECT * FROM fines WHERE transaction_id = :transactionId", nativeQuery = true)
+    Optional<Fine> findByTransactionId(@Param("transactionId") Long transactionId);
+
+
+    // ✅ 2. Get pending fines for user
+    @Query(value = "SELECT * FROM fines WHERE user_id = :userId AND status = :status", nativeQuery = true)
+    List<Fine> findByUserAndStatus(@Param("userId") Long userId,
+                                   @Param("status") String status);
+
+
+    // ✅ 3. Total pending fines amount
+    @Query(value = """
+        SELECT COALESCE(SUM(total_amount - paid_amount), 0)
+        FROM fines
+        WHERE status = 'PENDING'
+           OR status = 'PARTIAL'
+        """, nativeQuery = true)
+    Double getTotalPendingFinesAmount();
+
+
+    // ✅ 4. Monthly fine collection
+    @Query(value = """
+        SELECT EXTRACT(MONTH FROM paid_at) AS month,
+               SUM(paid_amount) AS total
+        FROM fines
+        WHERE status = 'PAID'
+          AND EXTRACT(YEAR FROM paid_at) = :year
+        GROUP BY month
+        ORDER BY month
+        """, nativeQuery = true)
+    List<Object[]> getMonthlyFineCollection(@Param("year") int year);
+
+
+    // ✅ 5. Count fines by status
+    @Query(value = "SELECT COUNT(*) FROM fines WHERE status = :status", nativeQuery = true)
+    long countByStatus(@Param("status") String status);
+
 
     // ✅ 6. Total collected amount
     @Query(value = """
