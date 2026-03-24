@@ -132,6 +132,32 @@ public interface BorrowTransactionRepository extends JpaRepository<BorrowTransac
         """, nativeQuery = true)
     List<BorrowTransaction> getOverdueTransactions(@Param("today") LocalDate today);
 
+
+    @Query(value = "SELECT COUNT(*) FROM borrow_transactions " +
+            "WHERE branch_id = :branchId AND status = 'BORROWED'",
+            nativeQuery = true)
+    Integer countActiveBorrowsByBranchId(@Param("branchId") Long branchId);
+
+    // Count overdue books in a branch
+    @Query(value = "SELECT COUNT(*) FROM borrow_transactions " +
+            "WHERE branch_id = :branchId AND status = 'OVERDUE'",
+            nativeQuery = true)
+    Integer countOverdueByBranchId(@Param("branchId") Long branchId);
+
+    // Count all borrows ever in a branch
+    @Query(value = "SELECT COUNT(*) FROM borrow_transactions " +
+            "WHERE branch_id = :branchId",
+            nativeQuery = true)
+    Integer countAllBorrowsByBranchId(@Param("branchId") Long branchId);
+
+    // All overdue transactions for a branch
+    @Query(value = "SELECT * FROM borrow_transactions bt " +
+            "WHERE bt.branch_id = :branchId " +
+            "AND bt.status = 'OVERDUE' " +
+            "ORDER BY bt.due_date ASC",
+            nativeQuery = true)
+    List<BorrowTransaction> findOverdueByBranchId(
+            @Param("branchId") Long branchId);
 }
 
 

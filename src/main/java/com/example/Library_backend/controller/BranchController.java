@@ -2,6 +2,7 @@ package com.example.Library_backend.controller;
 
 import com.example.Library_backend.dto.request.BranchRequest;
 import com.example.Library_backend.dto.response.*;
+import com.example.Library_backend.dto.response.authresponse.PagedResponse;
 import com.example.Library_backend.service.BranchService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
