@@ -1,6 +1,7 @@
 package com.example.Library_backend.repository;
 
 import com.example.Library_backend.entity.Fine;
+import com.example.Library_backend.enums.FineStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,6 +20,8 @@ public interface FineRepository
     // Used in: GET /api/fines/my — user's own fines
     // ─────────────────────────────────────────────────────────
     List<Fine> findByUserId(Long userId);
+    @Query("SELECT f FROM Fine f WHERE f.user.id = :userId")
+    Page<Fine> findByUserIdWithPagination(@Param("userId") Long userId, Pageable pageable);
 
     // ─────────────────────────────────────────────────────────
     // Used in: GET /api/fines/my/total — total outstanding amount
@@ -134,4 +137,30 @@ public interface FineRepository
         WHERE status = 'PAID'
         """, nativeQuery = true)
     Double getTotalCollectedAmount();
+
+    Page<Fine> findByStatus(FineStatus status, Pageable pageable);
+
+    @Query(value = """
+    SELECT 
+        f.*
+    FROM fine f
+    INNER JOIN transaction t ON f.transaction_id = t.id
+    INNER JOIN book b ON t.book_id = b.id
+    INNER JOIN branch br ON b.branch_id = br.id
+    WHERE br.id = :branchId
+    """,
+            countQuery = """
+    SELECT COUNT(f.id)
+    FROM fine f
+    INNER JOIN transaction t ON f.transaction_id = t.id
+    INNER JOIN book b ON t.book_id = b.id
+    INNER JOIN branch br ON b.branch_id = br.id
+    WHERE br.id = :branchId
+    """,
+            nativeQuery = true)
+    Page<Fine> findByBranch(
+            @Param("branchId") Long branchId,
+            Pageable pageable);
+
+    List<Fine> findByUserIdAndStatus(Long userId, FineStatus status);
 }

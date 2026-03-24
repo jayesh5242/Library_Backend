@@ -28,7 +28,7 @@ public class FineService {
     public ApiResponse<PageResponse<FineResponse>> my(Pageable pageable, Long userId) {
         try {
 
-            Page<FineResponse> data = repo.findByUserId(userId, pageable)
+            Page<FineResponse> data = repo.findByUserIdWithPagination(userId, pageable)
                     .map(this::map);
 
             return new ApiResponse<>(true, "Fetched fines", helperService.toPageResponse(data));
@@ -175,7 +175,7 @@ public class FineService {
 
     public ApiResponse<PageResponse<FineResponse>> byUser(Long userId, Pageable pageable) {
         try {
-            Page<FineResponse> data = repo.findByUserId(userId, pageable)
+            Page<FineResponse> data = repo.findByUserIdWithPagination(userId, pageable)
                     .map(this::map);
 
             return new ApiResponse<>(true, "User fines",  helperService.toPageResponse(data));
