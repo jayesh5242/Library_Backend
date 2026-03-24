@@ -5,5 +5,7 @@ public enum TransferStatus {
     APPROVED,
     IN_TRANSIT,
     COMPLETED,
-    REJECTED
+    REJECTED,
+    DISPATCHED,
+    RECEIVED
 }

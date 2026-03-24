@@ -2,6 +2,7 @@ package com.example.Library_backend.controller;
 
 import com.example.Library_backend.dto.request.CreateReservationRequest;
 import com.example.Library_backend.dto.response.ApiResponse;
+import com.example.Library_backend.dto.response.PageResponse;
 import com.example.Library_backend.dto.response.ReservationResponse;
 import com.example.Library_backend.service.CurrentUserService;
 import com.example.Library_backend.service.ReservationService;
@@ -29,7 +30,7 @@ public class ReservationController {
     }
 
     @GetMapping("/my")
-    public ResponseEntity<ApiResponse<Page<ReservationResponse>>> my(Pageable pageable) {
+    public ResponseEntity<ApiResponse<PageResponse<ReservationResponse>>> my(Pageable pageable) {
         try {
             Long userId = currentUserService.getCurrentUserId();
             return ResponseEntity.ok(reservationService.getMyReservations(pageable,userId));
@@ -48,7 +49,7 @@ public class ReservationController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse<Page<ReservationResponse>>> all(Pageable pageable) {
+    public ResponseEntity<ApiResponse<PageResponse<ReservationResponse>>> all(Pageable pageable) {
         try {
             return ResponseEntity.ok(reservationService.getAllReservations(pageable));
         } catch (Exception e) {
@@ -57,7 +58,7 @@ public class ReservationController {
     }
 
     @GetMapping("/pending")
-    public ResponseEntity<ApiResponse<Page<ReservationResponse>>> pending(@RequestParam Long branchId, Pageable pageable) {
+    public ResponseEntity<ApiResponse<PageResponse<ReservationResponse>>> pending(@RequestParam Long branchId, Pageable pageable) {
         try {
             return ResponseEntity.ok(reservationService.getPendingByBranch(branchId, pageable));
         } catch (Exception e) {
@@ -102,7 +103,7 @@ public class ReservationController {
     }
 
     @GetMapping("/book/{bookId}")
-    public ResponseEntity<ApiResponse<Page<ReservationResponse>>> byBook(@PathVariable Long bookId, Pageable pageable) {
+    public ResponseEntity<ApiResponse<PageResponse<ReservationResponse>>> byBook(@PathVariable Long bookId, Pageable pageable) {
         try {
             return ResponseEntity.ok(reservationService.getByBook(bookId, pageable));
         } catch (Exception e) {

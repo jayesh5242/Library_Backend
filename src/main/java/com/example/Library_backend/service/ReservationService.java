@@ -2,6 +2,7 @@ package com.example.Library_backend.service;
 
 import com.example.Library_backend.dto.request.CreateReservationRequest;
 import com.example.Library_backend.dto.response.ApiResponse;
+import com.example.Library_backend.dto.response.PageResponse;
 import com.example.Library_backend.dto.response.ReservationResponse;
 import com.example.Library_backend.entity.Book;
 import com.example.Library_backend.entity.Reservation;
@@ -25,6 +26,7 @@ public class ReservationService {
     private final ReservationRepository reservationRepo;
     private final BookRepository bookRepo;
     private final UserRepository userRepo;
+    private final HelperService helperService;
 
     public ApiResponse<ReservationResponse> createReservation(CreateReservationRequest request) {
         try {
@@ -52,14 +54,14 @@ public class ReservationService {
         }
     }
 
-    public ApiResponse<Page<ReservationResponse>> getMyReservations(Pageable pageable, Long userId) {
+    public ApiResponse<PageResponse<ReservationResponse>> getMyReservations(Pageable pageable, Long userId) {
         try {
 
             Page<ReservationResponse> data = reservationRepo
                     .findByUserId(userId, pageable)
                     .map(this::mapToResponse);
 
-            return new ApiResponse<>(true, "Fetched reservations successfully", data);
+            return new ApiResponse<>(true, "Fetched reservations successfully", helperService.toPageResponse(data));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -83,12 +85,12 @@ public class ReservationService {
         }
     }
 
-    public ApiResponse<Page<ReservationResponse>> getAllReservations(Pageable pageable) {
+    public ApiResponse<PageResponse<ReservationResponse>> getAllReservations(Pageable pageable) {
         try {
             Page<ReservationResponse> data = reservationRepo.findAll(pageable)
                     .map(this::mapToResponse);
 
-            return new ApiResponse<>(true, "Fetched all reservations", data);
+            return new ApiResponse<>(true, "Fetched all reservations", helperService.toPageResponse(data));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -96,13 +98,13 @@ public class ReservationService {
         }
     }
 
-    public ApiResponse<Page<ReservationResponse>> getPendingByBranch(Long branchId, Pageable pageable) {
+    public ApiResponse<PageResponse<ReservationResponse>> getPendingByBranch(Long branchId, Pageable pageable) {
         try {
             Page<ReservationResponse> data = reservationRepo
                     .findPendingByBranch(branchId, pageable)
                     .map(this::mapToResponse);
 
-            return new ApiResponse<>(true, "Fetched pending reservations", data);
+            return new ApiResponse<>(true, "Fetched pending reservations", helperService.toPageResponse(data));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -174,13 +176,13 @@ public class ReservationService {
         }
     }
 
-    public ApiResponse<Page<ReservationResponse>> getByBook(Long bookId, Pageable pageable) {
+    public ApiResponse<PageResponse<ReservationResponse>> getByBook(Long bookId, Pageable pageable) {
         try {
             Page<ReservationResponse> data = reservationRepo
                     .findByBookId(bookId, pageable)
                     .map(this::mapToResponse);
 
-            return new ApiResponse<>(true, "Fetched book reservations", data);
+            return new ApiResponse<>(true, "Fetched book reservations", helperService.toPageResponse(data));
 
         } catch (Exception e) {
             e.printStackTrace();

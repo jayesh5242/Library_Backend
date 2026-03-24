@@ -4,6 +4,7 @@ import com.example.Library_backend.dto.request.IssueBookRequest;
 import com.example.Library_backend.dto.request.ReturnBookRequest;
 import com.example.Library_backend.dto.response.ApiResponse;
 import com.example.Library_backend.dto.response.BorrowResponse;
+import com.example.Library_backend.dto.response.PageResponse;
 import com.example.Library_backend.enums.TransactionStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +22,7 @@ public class BorrowTransactionService {
     private final BorrowTransactionRepository borrowRepo;
     private final BookRepository bookRepo;
     private final UserRepository userRepo;
+    private final HelperService helperService;
 
     public ApiResponse<?> issueBook(IssueBookRequest request) {
         try{
@@ -126,14 +128,14 @@ public class BorrowTransactionService {
     }
 
     // ---------------- MY CURRENT BORROWED BOOKS ----------------
-    public ApiResponse<Page<BorrowResponse>> getMyBorrowedBooks(Pageable pageable,Long userId) {
+    public ApiResponse<PageResponse<BorrowResponse>> getMyBorrowedBooks(Pageable pageable, Long userId) {
         try {
 
             Page<BorrowResponse> data = borrowRepo
                     .findByUserIdAndStatus(userId, TransactionStatus.BORROWED, pageable)
                     .map(this::mapToResponse);
 
-            return new ApiResponse<>(true, "Fetched borrowed books successfully", data);
+            return new ApiResponse<>(true, "Fetched borrowed books successfully", helperService.toPageResponse(data));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -142,14 +144,14 @@ public class BorrowTransactionService {
     }
 
     // ---------------- MY BORROW HISTORY ----------------
-    public ApiResponse<Page<BorrowResponse>> getMyBorrowHistory(Pageable pageable,Long userId) {
+    public ApiResponse<PageResponse<BorrowResponse>> getMyBorrowHistory(Pageable pageable,Long userId) {
         try {
 
             Page<BorrowResponse> data = borrowRepo
                     .findByUserId(userId, pageable)
                     .map(this::mapToResponse);
 
-            return new ApiResponse<>(true, "Fetched borrow history successfully", data);
+            return new ApiResponse<>(true, "Fetched borrow history successfully",  helperService.toPageResponse(data));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -158,12 +160,12 @@ public class BorrowTransactionService {
     }
 
     // ---------------- ALL TRANSACTIONS ----------------
-    public ApiResponse<Page<BorrowResponse>> getAllTransactions(Pageable pageable) {
+    public ApiResponse<PageResponse<BorrowResponse>> getAllTransactions(Pageable pageable) {
         try {
             Page<BorrowResponse> data = borrowRepo.findAll(pageable)
                     .map(this::mapToResponse);
 
-            return new ApiResponse<>(true, "Fetched all transactions successfully", data);
+            return new ApiResponse<>(true, "Fetched all transactions successfully",  helperService.toPageResponse(data));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -172,13 +174,13 @@ public class BorrowTransactionService {
     }
 
     // ---------------- ALL OVERDUE ----------------
-    public ApiResponse<Page<BorrowResponse>> getAllOverdue(Pageable pageable) {
+    public ApiResponse<PageResponse<BorrowResponse>> getAllOverdue(Pageable pageable) {
         try {
             Page<BorrowResponse> data = borrowRepo
                     .findOverdue(LocalDate.now(), pageable)
                     .map(this::mapToResponse);
 
-            return new ApiResponse<>(true, "Fetched overdue books successfully", data);
+            return new ApiResponse<>(true, "Fetched overdue books successfully",  helperService.toPageResponse(data));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -187,13 +189,13 @@ public class BorrowTransactionService {
     }
 
     // ---------------- OVERDUE BY BRANCH ----------------
-    public ApiResponse<Page<BorrowResponse>> getOverdueByBranch(Long branchId, Pageable pageable) {
+    public ApiResponse<PageResponse<BorrowResponse>> getOverdueByBranch(Long branchId, Pageable pageable) {
         try {
             Page<BorrowResponse> data = borrowRepo
                     .findOverdueByBranch(branchId, LocalDate.now(), pageable)
                     .map(this::mapToResponse);
 
-            return new ApiResponse<>(true, "Fetched branch overdue books successfully", data);
+            return new ApiResponse<>(true, "Fetched branch overdue books successfully",  helperService.toPageResponse(data));
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -246,13 +248,13 @@ public class BorrowTransactionService {
     }
 
     // ---------------- USER HISTORY ----------------
-    public ApiResponse<Page<BorrowResponse>> getUserHistory(Long userId, Pageable pageable) {
+    public ApiResponse<PageResponse<BorrowResponse>> getUserHistory(Long userId, Pageable pageable) {
         try {
             Page<BorrowResponse> data = borrowRepo
                     .findByUserId(userId, pageable)
                     .map(this::mapToResponse);
 
-            return new ApiResponse<>(true, "Fetched user history successfully", data);
+            return new ApiResponse<>(true, "Fetched user history successfully",  helperService.toPageResponse(data));
 
         } catch (Exception e) {
             e.printStackTrace();

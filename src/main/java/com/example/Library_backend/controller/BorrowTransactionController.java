@@ -5,6 +5,7 @@ import com.example.Library_backend.dto.request.ReturnBookRequest;
 import com.example.Library_backend.dto.response.ApiResponse;
 import com.example.Library_backend.dto.response.BorrowResponse;
 
+import com.example.Library_backend.dto.response.PageResponse;
 import com.example.Library_backend.dto.response.ApiResponse;
 import com.example.Library_backend.dto.response.BorrowResponse;
 import com.example.Library_backend.service.BorrowTransactionService;
@@ -62,12 +63,12 @@ public class BorrowTransactionController {
     }
 
     @GetMapping("/my")
-    public ResponseEntity<ApiResponse<Page<BorrowResponse>>> getMyBorrowedBooks(@RequestHeader("Authorization") String authToken, Pageable pageable) {
+    public ResponseEntity<ApiResponse<PageResponse<BorrowResponse>>> getMyBorrowedBooks(@RequestHeader("Authorization") String authToken, Pageable pageable) {
         try {
-            Long userId = 1L;
+            Long userId = currentUserService.getCurrentUserId();
             return ResponseEntity.ok(borrowService.getMyBorrowedBooks(pageable,userId));
         } catch (Exception e) {
-            return ResponseEntity.ok(ApiResponse.<Page<BorrowResponse>>builder()
+            return ResponseEntity.ok(ApiResponse.<PageResponse<BorrowResponse>>builder()
                     .success(false)
                     .message("Failed to fetch borrowed books")
                     .data(null)
@@ -76,12 +77,12 @@ public class BorrowTransactionController {
     }
 
     @GetMapping("/my/history")
-    public ResponseEntity<ApiResponse<Page<BorrowResponse>>> getMyBorrowHistory(Pageable pageable) {
+    public ResponseEntity<ApiResponse<PageResponse<BorrowResponse>>> getMyBorrowHistory(Pageable pageable) {
         try {
             Long userId = currentUserService.getCurrentUserId();
             return ResponseEntity.ok(borrowService.getMyBorrowHistory(pageable,userId));
         } catch (Exception e) {
-            return ResponseEntity.ok(ApiResponse.<Page<BorrowResponse>>builder()
+            return ResponseEntity.ok(ApiResponse.<PageResponse<BorrowResponse>>builder()
                     .success(false)
                     .message("Failed to fetch borrow history")
                     .data(null)
@@ -90,11 +91,11 @@ public class BorrowTransactionController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse<Page<BorrowResponse>>> getAllTransactions(Pageable pageable) {
+    public ResponseEntity<ApiResponse<PageResponse<BorrowResponse>>> getAllTransactions(Pageable pageable) {
         try {
             return ResponseEntity.ok(borrowService.getAllTransactions(pageable));
         } catch (Exception e) {
-            return ResponseEntity.ok(ApiResponse.<Page<BorrowResponse>>builder()
+            return ResponseEntity.ok(ApiResponse.<PageResponse<BorrowResponse>>builder()
                     .success(false)
                     .message("Failed to fetch transactions")
                     .data(null)
@@ -103,11 +104,11 @@ public class BorrowTransactionController {
     }
 
     @GetMapping("/overdue")
-    public ResponseEntity<ApiResponse<Page<BorrowResponse>>> getAllOverdue(Pageable pageable) {
+    public ResponseEntity<ApiResponse<PageResponse<BorrowResponse>>> getAllOverdue(Pageable pageable) {
         try {
             return ResponseEntity.ok(borrowService.getAllOverdue(pageable));
         } catch (Exception e) {
-            return ResponseEntity.ok(ApiResponse.<Page<BorrowResponse>>builder()
+            return ResponseEntity.ok(ApiResponse.<PageResponse<BorrowResponse>>builder()
                     .success(false)
                     .message("Failed to fetch overdue books")
                     .data(null)
@@ -116,11 +117,11 @@ public class BorrowTransactionController {
     }
 
     @GetMapping("/overdue/branch/{id}")
-    public ResponseEntity<ApiResponse<Page<BorrowResponse>>> getOverdueByBranch(@PathVariable Long id, Pageable pageable) {
+    public ResponseEntity<ApiResponse<PageResponse<BorrowResponse>>> getOverdueByBranch(@PathVariable Long id, Pageable pageable) {
         try {
             return ResponseEntity.ok(borrowService.getOverdueByBranch(id, pageable));
         } catch (Exception e) {
-            return ResponseEntity.ok(ApiResponse.<Page<BorrowResponse>>builder()
+            return ResponseEntity.ok(ApiResponse.<PageResponse<BorrowResponse>>builder()
                     .success(false)
                     .message("Failed to fetch branch overdue books")
                     .data(null)
@@ -155,11 +156,11 @@ public class BorrowTransactionController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<ApiResponse<Page<BorrowResponse>>> getUserHistory(@PathVariable Long userId, Pageable pageable) {
+    public ResponseEntity<ApiResponse<PageResponse<BorrowResponse>>> getUserHistory(@PathVariable Long userId, Pageable pageable) {
         try {
             return ResponseEntity.ok(borrowService.getUserHistory(userId, pageable));
         } catch (Exception e) {
-            return ResponseEntity.ok(ApiResponse.<Page<BorrowResponse>>builder()
+            return ResponseEntity.ok(ApiResponse.<PageResponse<BorrowResponse>>builder()
                     .success(false)
                     .message("Failed to fetch user history")
                     .data(null)

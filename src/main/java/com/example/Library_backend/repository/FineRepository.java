@@ -12,12 +12,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface FineRepository extends JpaRepository<Fine, Long> {
-
-    // ─────────────────────────────────────────────────────────
-    // Used in: BorrowService — check unpaid fines before issuing
-    // ─────────────────────────────────────────────────────────
-    boolean existsByUserIdAndStatusIn(Long userId, List<String> statuses);
+public interface FineRepository
+        extends JpaRepository<Fine, Long> {
 
     // ─────────────────────────────────────────────────────────
     // Used in: GET /api/fines/my — user's own fines
