@@ -1,4 +1,4 @@
-package com.example.Library_backend.dto.request;
+package com.example.Library_backend.dto.request.authrequest;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -27,4 +27,5 @@ public class RegisterRequest {
     private String department;
     private String enrollmentNo;  // for students
     private String employeeId;    // for faculty/staff
+    private Long branchId;
 }

@@ -34,6 +34,11 @@ public class User {
     @Column(name = "role", nullable = false)
     private Role role;
 
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "branch_id")
+    private Branch branch;
+
     @Column(name = "department")
     private String department;
 

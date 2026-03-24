@@ -96,4 +96,12 @@ public interface FineRepository extends JpaRepository<Fine, Long> {
     // Used in: FineCalculationScheduler — find fine by transaction
     // ─────────────────────────────────────────────────────────
     Optional<Fine> findByTransactionId(Long transactionId);
+
+    // ✅ 6. Total collected amount
+    @Query(value = """
+        SELECT COALESCE(SUM(paid_amount), 0)
+        FROM fines
+        WHERE status = 'PAID'
+        """, nativeQuery = true)
+    Double getTotalCollectedAmount();
 }

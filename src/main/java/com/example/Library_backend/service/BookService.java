@@ -4,6 +4,7 @@ package com.example.Library_backend.service;
 import com.example.Library_backend.dto.request.BookRequest;
 import com.example.Library_backend.dto.request.BookReviewRequest;
 import com.example.Library_backend.dto.response.*;
+import com.example.Library_backend.dto.response.authresponse.PagedResponse;
 import com.example.Library_backend.entity.Book;
 import com.example.Library_backend.entity.BookInventory;
 import com.example.Library_backend.entity.BookReview;

@@ -4,6 +4,7 @@ import com.example.Library_backend.dto.request.BookRequest;
 import com.example.Library_backend.dto.request.BookReviewRequest;
 import com.example.Library_backend.dto.response.*;
 import com.example.Library_backend.dto.response.ApiResponse;
+import com.example.Library_backend.dto.response.authresponse.PagedResponse;
 import com.example.Library_backend.repository.BookInventoryRepository;
 import com.example.Library_backend.service.BookService;
 import io.swagger.v3.oas.annotations.Operation;

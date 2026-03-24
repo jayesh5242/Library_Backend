@@ -1,10 +1,10 @@
 package com.example.Library_backend.controller;
 
-import com.example.Library_backend.dto.request.*;
+import com.example.Library_backend.dto.request.authrequest.*;
 import com.example.Library_backend.dto.response.ApiResponse;
-import com.example.Library_backend.dto.response.AuthResponse;
-import com.example.Library_backend.dto.response.RefreshTokenResponse;
-import com.example.Library_backend.dto.response.UserProfileResponse;
+import com.example.Library_backend.dto.response.authresponse.AuthResponse;
+import com.example.Library_backend.dto.response.authresponse.RefreshTokenResponse;
+import com.example.Library_backend.dto.response.authresponse.UserProfileResponse;
 import com.example.Library_backend.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

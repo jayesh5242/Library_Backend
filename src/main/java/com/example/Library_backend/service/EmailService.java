@@ -37,7 +37,7 @@ public class EmailService {
     public void sendVerificationEmail(String toEmail,
                                       String token) {
         String subject = "Verify Your Email - College Library";
-        String link = "http://localhost:8080"
+        String link = "http://localhost:9090"
                 + "/api/auth/verify-email/" + token;
         String body =
                 "Hello!\n\n"

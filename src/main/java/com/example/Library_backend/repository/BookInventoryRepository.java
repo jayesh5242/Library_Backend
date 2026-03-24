@@ -14,6 +14,7 @@ import java.util.Optional;
 public interface BookInventoryRepository extends JpaRepository<BookInventory, Long> {
 
     // Get all inventory records for a book across all branches
+
     List<BookInventory> findByBookId(Long bookId);
 
     // Get paginated books in a branch
