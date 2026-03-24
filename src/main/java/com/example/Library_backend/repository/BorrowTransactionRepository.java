@@ -6,10 +6,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Repository
 public interface BorrowTransactionRepository extends JpaRepository<BorrowTransaction,Long> {
@@ -50,4 +52,34 @@ public interface BorrowTransactionRepository extends JpaRepository<BorrowTransac
     """,
             nativeQuery = true)
     Page<BorrowTransaction> findOverdueByBranch(Long branchId, LocalDate now, Pageable pageable);
+
+    @Query(value = "SELECT COUNT(*) FROM borrow_transactions " +
+            "WHERE branch_id = :branchId AND status = 'BORROWED'",
+            nativeQuery = true)
+    Integer countActiveBorrowsByBranchId(@Param("branchId") Long branchId);
+
+    // Count overdue books in a branch
+    @Query(value = "SELECT COUNT(*) FROM borrow_transactions " +
+            "WHERE branch_id = :branchId AND status = 'OVERDUE'",
+            nativeQuery = true)
+    Integer countOverdueByBranchId(@Param("branchId") Long branchId);
+
+    // Count all borrows ever in a branch
+    @Query(value = "SELECT COUNT(*) FROM borrow_transactions " +
+            "WHERE branch_id = :branchId",
+            nativeQuery = true)
+    Integer countAllBorrowsByBranchId(@Param("branchId") Long branchId);
+
+    // All overdue transactions for a branch
+    @Query(value = "SELECT * FROM borrow_transactions bt " +
+            "WHERE bt.branch_id = :branchId " +
+            "AND bt.status = 'OVERDUE' " +
+            "ORDER BY bt.due_date ASC",
+            nativeQuery = true)
+    List<BorrowTransaction> findOverdueByBranchId(
+            @Param("branchId") Long branchId);
+
+
+
+
 }

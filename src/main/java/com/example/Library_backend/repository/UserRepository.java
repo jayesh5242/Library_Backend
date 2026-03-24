@@ -55,4 +55,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // Check if employee ID exists (excluding current user)
     boolean existsByEmployeeIdAndIdNot(
             String employeeId, Long id);
+
+    // Count users assigned to a branch
+    @Query(value = "SELECT COUNT(*) FROM users WHERE branch_id = :branchId",
+            nativeQuery = true)
+    Integer countUsersByBranchId(@Param("branchId") Long branchId);
 }

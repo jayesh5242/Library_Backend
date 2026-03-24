@@ -2,11 +2,13 @@ package com.example.Library_backend.entity;
 
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 
+@Builder
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -38,11 +40,12 @@ public class BookInventory {
     @Column(name = "shelf_location")
     private String shelfLocation;
 
-    @Column(name = "added_at")
-    private LocalDateTime addedAt;
+    @Column(length = 20)
+    @Builder.Default
+    private String condition = "GOOD";
 
-    @PrePersist
-    protected void onCreate() {
-        addedAt = LocalDateTime.now();
-    }
+    @Column(name = "added_at", updatable = false)
+    @Builder.Default
+    private LocalDateTime addedAt = LocalDateTime.now();
+
 }
