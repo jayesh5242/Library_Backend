@@ -1,13 +1,16 @@
 package com.example.Library_backend.entity;
 
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+// ── ReadingList Entity ────────────────────────────────────────
 @Entity
 @Table(name = "reading_lists")
 @Getter
@@ -37,32 +40,23 @@ public class ReadingList {
     @Column(nullable = false, length = 200)
     private String title;
 
-    @NotBlank
-    @Size(max = 100)
     @Column(nullable = false, length = 100)
     private String subject;
 
-    @Size(max = 20)
     @Column(length = 20)
-    private String semester;
+    private String semester;        // e.g. "Sem 5", "2026-Spring"
 
     @Column(columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "is_public")
+    @Builder.Default
     private Boolean isPublic = true;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-    // -------- AUTO TIMESTAMP --------
 
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
 
-        if (this.isPublic == null) {
-            this.isPublic = true;
-        }
-    }
 }
