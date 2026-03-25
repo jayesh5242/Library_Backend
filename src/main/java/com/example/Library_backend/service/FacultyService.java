@@ -1,6 +1,5 @@
 package com.example.Library_backend.service;
 
-
 import com.example.Library_backend.dto.request.PurchaseRequestRequest;
 import com.example.Library_backend.dto.request.ReadingListRequest;
 import com.example.Library_backend.dto.response.BookResponse;
@@ -30,11 +29,10 @@ public class FacultyService {
     private final UserRepository            userRepository;
     private final BookService               bookService;
 
-    // ═════════════════════════════════════════════════════════
-    // READING LIST APIs
-    // ═════════════════════════════════════════════════════════
-
-    // API 1: GET /api/reading-lists — Public
+    // ─────────────────────────────────────────────────────────
+    // API 1: GET /api/reading-lists
+    // Browse all public reading lists — Public
+    // ─────────────────────────────────────────────────────────
     public List<ReadingListResponse> getAllPublicReadingLists() {
         return readingListRepository.findByIsPublicTrue()
                 .stream()
@@ -42,7 +40,10 @@ public class FacultyService {
                 .collect(Collectors.toList());
     }
 
-    // API 2: GET /api/reading-lists/{id} — Public
+    // ─────────────────────────────────────────────────────────
+    // API 2: GET /api/reading-lists/{id}
+    // Get reading list with all books — Public
+    // ─────────────────────────────────────────────────────────
     public ReadingListResponse getReadingListById(Long id) {
         ReadingList rl = readingListRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -50,7 +51,10 @@ public class FacultyService {
         return mapToResponse(rl, true);
     }
 
-    // API 3: GET /api/reading-lists/my — Faculty only
+    // ─────────────────────────────────────────────────────────
+    // API 3: GET /api/reading-lists/my
+    // Faculty's own reading lists — Faculty only
+    // ─────────────────────────────────────────────────────────
     public List<ReadingListResponse> getMyReadingLists(String email) {
         User faculty = findUserByEmail(email);
         return readingListRepository.findByFacultyId(faculty.getId())
@@ -59,7 +63,10 @@ public class FacultyService {
                 .collect(Collectors.toList());
     }
 
-    // API 4: POST /api/reading-lists — Faculty only
+    // ─────────────────────────────────────────────────────────
+    // API 4: POST /api/reading-lists
+    // Create a new reading list — Faculty only
+    // ─────────────────────────────────────────────────────────
     @Transactional
     public ReadingListResponse createReadingList(
             ReadingListRequest request, String email) {
@@ -79,7 +86,10 @@ public class FacultyService {
         return mapToResponse(readingListRepository.save(rl), false);
     }
 
-    // API 5: PUT /api/reading-lists/{id} — Faculty only (own list)
+    // ─────────────────────────────────────────────────────────
+    // API 5: PUT /api/reading-lists/{id}
+    // Update reading list — Faculty only (own list)
+    // ─────────────────────────────────────────────────────────
     @Transactional
     public ReadingListResponse updateReadingList(
             Long id, ReadingListRequest request, String email) {
@@ -90,10 +100,9 @@ public class FacultyService {
 
         User faculty = findUserByEmail(email);
 
-        if (!rl.getFaculty().getId().equals(faculty.getId())) {
+        if (!rl.getFaculty().getId().equals(faculty.getId()))
             throw new UnauthorizedException(
                     "You can only update your own reading lists");
-        }
 
         rl.setTitle(request.getTitle());
         rl.setSubject(request.getSubject());
@@ -105,7 +114,10 @@ public class FacultyService {
         return mapToResponse(readingListRepository.save(rl), false);
     }
 
-    // API 6: DELETE /api/reading-lists/{id} — Faculty (own) or Admin
+    // ─────────────────────────────────────────────────────────
+    // API 6: DELETE /api/reading-lists/{id}
+    // Delete reading list — Faculty (own) or Admin
+    // ─────────────────────────────────────────────────────────
     @Transactional
     public void deleteReadingList(Long id, String email) {
 
@@ -118,15 +130,17 @@ public class FacultyService {
         boolean isAdmin = user.getRole().name().equals("SUPER_ADMIN");
         boolean isOwner = rl.getFaculty().getId().equals(user.getId());
 
-        if (!isAdmin && !isOwner) {
+        if (!isAdmin && !isOwner)
             throw new UnauthorizedException(
                     "You can only delete your own reading lists");
-        }
 
         readingListRepository.delete(rl);
     }
 
-    // API 7: POST /api/reading-lists/{id}/books — Faculty only (own list)
+    // ─────────────────────────────────────────────────────────
+    // API 7: POST /api/reading-lists/{id}/books
+    // Add book to reading list — Faculty only (own list)
+    // ─────────────────────────────────────────────────────────
     @Transactional
     public ReadingListResponse addBookToReadingList(
             Long readingListId, Long bookId, String email) {
@@ -137,25 +151,26 @@ public class FacultyService {
 
         User faculty = findUserByEmail(email);
 
-        if (!rl.getFaculty().getId().equals(faculty.getId())) {
+        if (!rl.getFaculty().getId().equals(faculty.getId()))
             throw new UnauthorizedException(
                     "You can only add books to your own reading lists");
-        }
 
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Book not found with id: " + bookId));
 
-        if (rl.getBooks().stream().anyMatch(b -> b.getId().equals(bookId))) {
+        if (rl.getBooks().stream().anyMatch(b -> b.getId().equals(bookId)))
             throw new IllegalArgumentException(
                     "Book is already in this reading list");
-        }
 
         rl.getBooks().add(book);
         return mapToResponse(readingListRepository.save(rl), true);
     }
 
-    // API 8: DELETE /api/reading-lists/{id}/books/{bookId} — Faculty only
+    // ─────────────────────────────────────────────────────────
+    // API 8: DELETE /api/reading-lists/{id}/books/{bookId}
+    // Remove book from reading list — Faculty only (own list)
+    // ─────────────────────────────────────────────────────────
     @Transactional
     public ReadingListResponse removeBookFromReadingList(
             Long readingListId, Long bookId, String email) {
@@ -166,20 +181,18 @@ public class FacultyService {
 
         User faculty = findUserByEmail(email);
 
-        if (!rl.getFaculty().getId().equals(faculty.getId())) {
+        if (!rl.getFaculty().getId().equals(faculty.getId()))
             throw new UnauthorizedException(
                     "You can only remove books from your own reading lists");
-        }
 
         rl.getBooks().removeIf(b -> b.getId().equals(bookId));
         return mapToResponse(readingListRepository.save(rl), true);
     }
 
-    // ═════════════════════════════════════════════════════════
-    // PURCHASE REQUEST APIs
-    // ═════════════════════════════════════════════════════════
-
-    // API 9: GET /api/purchase-requests/my — Faculty only
+    // ─────────────────────────────────────────────────────────
+    // API 9: GET /api/purchase-requests/my
+    // Faculty's own purchase requests — Faculty only
+    // ─────────────────────────────────────────────────────────
     public List<PurchaseRequestResponse> getMyPurchaseRequests(String email) {
         User faculty = findUserByEmail(email);
         return purchaseRequestRepository
@@ -189,7 +202,10 @@ public class FacultyService {
                 .collect(Collectors.toList());
     }
 
-    // API 10: POST /api/purchase-requests — Faculty only
+    // ─────────────────────────────────────────────────────────
+    // API 10: POST /api/purchase-requests
+    // Submit a book purchase request — Faculty only
+    // ─────────────────────────────────────────────────────────
     @Transactional
     public PurchaseRequestResponse submitPurchaseRequest(
             PurchaseRequestRequest request, String email) {
@@ -200,7 +216,6 @@ public class FacultyService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Branch not found with id: " + request.getBranchId()));
 
-        // ── FIX: use Priority enum instead of String ──────────
         Priority priority;
         try {
             priority = request.getPriority() != null
@@ -218,15 +233,18 @@ public class FacultyService {
                 .author(request.getAuthor())
                 .isbn(request.getIsbn())
                 .reason(request.getReason())
-                .priority(priority)                     // ← enum
-                .status(RequestStatus.PENDING)          // ← enum
+                .priority(priority)
+                .status(RequestStatus.PENDING)
                 .build();
 
         return mapToPurchaseResponse(
                 purchaseRequestRepository.save(purchaseRequest));
     }
 
-    // API 11: GET /api/purchase-requests/all — Librarian/Admin only
+    // ─────────────────────────────────────────────────────────
+    // API 11: GET /api/purchase-requests/all
+    // All purchase requests — Librarian/Admin only
+    // ─────────────────────────────────────────────────────────
     public List<PurchaseRequestResponse> getAllPurchaseRequests() {
         return purchaseRequestRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
@@ -234,7 +252,10 @@ public class FacultyService {
                 .collect(Collectors.toList());
     }
 
-    // API 12: PUT /api/purchase-requests/{id}/approve — Admin only
+    // ─────────────────────────────────────────────────────────
+    // API 12: PUT /api/purchase-requests/{id}/approve
+    // Approve a purchase request — Admin only
+    // ─────────────────────────────────────────────────────────
     @Transactional
     public PurchaseRequestResponse approvePurchaseRequest(
             Long id, String adminEmail) {
@@ -242,14 +263,16 @@ public class FacultyService {
         BookPurchaseRequest request = findPurchaseRequestOrThrow(id);
         User admin = findUserByEmail(adminEmail);
 
-        // ── FIX: use RequestStatus enum ───────────────────────
-        request.setStatus(RequestStatus.APPROVED);      // ← enum
+        request.setStatus(RequestStatus.APPROVED);
         request.setApprovedBy(admin);
 
         return mapToPurchaseResponse(purchaseRequestRepository.save(request));
     }
 
-    // API 13: PUT /api/purchase-requests/{id}/reject — Admin only
+    // ─────────────────────────────────────────────────────────
+    // API 13: PUT /api/purchase-requests/{id}/reject
+    // Reject a purchase request with reason — Admin only
+    // ─────────────────────────────────────────────────────────
     @Transactional
     public PurchaseRequestResponse rejectPurchaseRequest(
             Long id, String adminNotes, String adminEmail) {
@@ -257,22 +280,21 @@ public class FacultyService {
         BookPurchaseRequest request = findPurchaseRequestOrThrow(id);
         User admin = findUserByEmail(adminEmail);
 
-        // ── FIX: use RequestStatus enum ───────────────────────
-        request.setStatus(RequestStatus.REJECTED);      // ← enum
+        request.setStatus(RequestStatus.REJECTED);
         request.setApprovedBy(admin);
         request.setAdminNotes(adminNotes);
 
         return mapToPurchaseResponse(purchaseRequestRepository.save(request));
     }
 
-    // ═════════════════════════════════════════════════════════
+    // ─────────────────────────────────────────────────────────
     // SHARED HELPERS
-    // ═════════════════════════════════════════════════════════
+    // ─────────────────────────────────────────────────────────
 
     private User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "User not found with email: " + email));
+                        "User not found: " + email));
     }
 
     private BookPurchaseRequest findPurchaseRequestOrThrow(Long id) {
@@ -281,7 +303,7 @@ public class FacultyService {
                         "Purchase request not found with id: " + id));
     }
 
-    private ReadingListResponse mapToResponse(
+    public ReadingListResponse mapToResponse(
             ReadingList rl, boolean includeBooks) {
 
         ReadingListResponse res = ReadingListResponse.builder()
@@ -307,7 +329,7 @@ public class FacultyService {
         return res;
     }
 
-    private PurchaseRequestResponse mapToPurchaseResponse(
+    public PurchaseRequestResponse mapToPurchaseResponse(
             BookPurchaseRequest req) {
 
         PurchaseRequestResponse res = PurchaseRequestResponse.builder()
@@ -320,7 +342,6 @@ public class FacultyService {
                 .author(req.getAuthor())
                 .isbn(req.getIsbn())
                 .reason(req.getReason())
-                // ── FIX: convert enum to String for response ──
                 .priority(req.getPriority() != null
                         ? req.getPriority().name() : null)
                 .status(req.getStatus() != null

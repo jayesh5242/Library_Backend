@@ -1,11 +1,12 @@
 package com.example.Library_backend.entity;
 
+import com.example.Library_backend.entity.Branch;
+import com.example.Library_backend.entity.User;
 import com.example.Library_backend.enums.Priority;
 import com.example.Library_backend.enums.RequestStatus;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -22,8 +23,6 @@ public class BookPurchaseRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // -------- RELATIONS --------
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requested_by", nullable = false)
     private User requestedBy;
@@ -32,55 +31,36 @@ public class BookPurchaseRequest {
     @JoinColumn(name = "branch_id", nullable = false)
     private Branch branch;
 
+    @Column(name = "book_title", nullable = false, length = 200)
+    private String bookTitle;
+
+    @Column(length = 150)
+    private String author;
+
+    @Column(length = 20)
+    private String isbn;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String reason;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 10)
+    @Builder.Default
+    private Priority priority = Priority.NORMAL;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private RequestStatus status = RequestStatus.PENDING;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approved_by")
     private User approvedBy;
 
-    // -------- FIELDS --------
-
-    @NotBlank
-    @Size(max = 200)
-    @Column(name = "book_title", nullable = false, length = 200)
-    private String bookTitle;
-
-    @Size(max = 150)
-    @Column(name = "author", length = 150)
-    private String author;
-
-    @Size(max = 20)
-    @Column(name = "isbn", length = 20)
-    private String isbn;
-
-    @NotBlank
-    @Column(name = "reason", nullable = false, columnDefinition = "TEXT")
-    private String reason;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "priority", length = 10)
-    private Priority priority = Priority.NORMAL;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", length = 20, nullable = false)
-    private RequestStatus status;
-
     @Column(name = "admin_notes", columnDefinition = "TEXT")
     private String adminNotes;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
-
-    // -------- AUTO TIMESTAMP --------
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-
-        if (this.priority == null) {
-            this.priority = Priority.NORMAL;
-        }
-
-        if (this.status == null) {
-            this.status = RequestStatus.PENDING;
-        }
-    }
 }

@@ -1,16 +1,13 @@
 package com.example.Library_backend.entity;
 
-
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
-// ── ReadingList Entity ────────────────────────────────────────
 @Entity
 @Table(name = "reading_lists")
 @Getter
@@ -24,19 +21,10 @@ public class ReadingList {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // -------- RELATIONS --------
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "faculty_id", nullable = false)
     private User faculty;
 
-    @OneToMany(mappedBy = "readingList", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ReadingListBook> books;
-
-    // -------- FIELDS --------
-
-    @NotBlank
-    @Size(max = 200)
     @Column(nullable = false, length = 200)
     private String title;
 
@@ -44,7 +32,7 @@ public class ReadingList {
     private String subject;
 
     @Column(length = 20)
-    private String semester;        // e.g. "Sem 5", "2026-Spring"
+    private String semester;
 
     @Column(columnDefinition = "TEXT")
     private String description;
@@ -57,6 +45,13 @@ public class ReadingList {
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
-
-
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "reading_list_books",
+            joinColumns = @JoinColumn(name = "reading_list_id"),
+            inverseJoinColumns = @JoinColumn(name = "book_id")
+    )
+    @Builder.Default
+    private List<Book> books = new ArrayList<>();
 }
+

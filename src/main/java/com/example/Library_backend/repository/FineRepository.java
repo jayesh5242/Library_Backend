@@ -22,7 +22,6 @@ public interface FineRepository
     List<Fine> findByUserId(Long userId);
     @Query("SELECT f FROM Fine f WHERE f.user.id = :userId")
     Page<Fine> findByUserIdWithPagination(@Param("userId") Long userId, Pageable pageable);
-
     // ─────────────────────────────────────────────────────────
     // Used in: GET /api/fines/my/total — total outstanding amount
     // ─────────────────────────────────────────────────────────
@@ -104,24 +103,24 @@ public interface FineRepository
 
     // ✅ 3. Total pending fines amount
     @Query(value = """
-        SELECT COALESCE(SUM(total_amount - paid_amount), 0)
-        FROM fines
-        WHERE status = 'PENDING'
-           OR status = 'PARTIAL'
-        """, nativeQuery = true)
+            SELECT COALESCE(SUM(total_amount - paid_amount), 0)
+            FROM fines
+            WHERE status = 'PENDING'
+               OR status = 'PARTIAL'
+            """, nativeQuery = true)
     Double getTotalPendingFinesAmount();
 
 
     // ✅ 4. Monthly fine collection
     @Query(value = """
-        SELECT EXTRACT(MONTH FROM paid_at) AS month,
-               SUM(paid_amount) AS total
-        FROM fines
-        WHERE status = 'PAID'
-          AND EXTRACT(YEAR FROM paid_at) = :year
-        GROUP BY month
-        ORDER BY month
-        """, nativeQuery = true)
+            SELECT EXTRACT(MONTH FROM paid_at) AS month,
+                   SUM(paid_amount) AS total
+            FROM fines
+            WHERE status = 'PAID'
+              AND EXTRACT(YEAR FROM paid_at) = :year
+            GROUP BY month
+            ORDER BY month
+            """, nativeQuery = true)
     List<Object[]> getMonthlyFineCollection(@Param("year") int year);
 
 
@@ -132,35 +131,33 @@ public interface FineRepository
 
     // ✅ 6. Total collected amount
     @Query(value = """
-        SELECT COALESCE(SUM(paid_amount), 0)
-        FROM fines
-        WHERE status = 'PAID'
-        """, nativeQuery = true)
+            SELECT COALESCE(SUM(paid_amount), 0)
+            FROM fines
+            WHERE status = 'PAID'
+            """, nativeQuery = true)
     Double getTotalCollectedAmount();
 
     Page<Fine> findByStatus(FineStatus status, Pageable pageable);
 
     @Query(value = """
-    SELECT 
-        f.*
-    FROM fine f
-    INNER JOIN transaction t ON f.transaction_id = t.id
-    INNER JOIN book b ON t.book_id = b.id
-    INNER JOIN branch br ON b.branch_id = br.id
-    WHERE br.id = :branchId
-    """,
+                SELECT f.*
+                FROM fines f
+                JOIN borrow_transactions bt ON f.transaction_id = bt.id
+                JOIN books b ON bt.book_id = b.id
+                WHERE b.branch_id = :branchId
+            """,
             countQuery = """
-    SELECT COUNT(f.id)
-    FROM fine f
-    INNER JOIN transaction t ON f.transaction_id = t.id
-    INNER JOIN book b ON t.book_id = b.id
-    INNER JOIN branch br ON b.branch_id = br.id
-    WHERE br.id = :branchId
-    """,
+                        SELECT COUNT(*)
+                        FROM fines f
+                        JOIN borrow_transactions bt ON f.transaction_id = bt.id
+                        JOIN books b ON bt.book_id = b.id
+                        WHERE b.branch_id = :branchId
+                    """,
             nativeQuery = true)
-    Page<Fine> findByBranch(
-            @Param("branchId") Long branchId,
-            Pageable pageable);
+    Page<Fine> findByBranch(Long branchId, Pageable pageable);
+
+    Page<Fine> findByUserId(Long userId, Pageable pageable);
 
     List<Fine> findByUserIdAndStatus(Long userId, FineStatus status);
+
 }

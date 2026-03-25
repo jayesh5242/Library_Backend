@@ -3,10 +3,13 @@ package com.example.Library_backend.dto.response;
 import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;
- 
-@Data @NoArgsConstructor @AllArgsConstructor @Builder
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ReadingListResponse {
- 
+
     private Long              id;
     private Long              facultyId;
     private String            facultyName;
@@ -16,6 +19,6 @@ public class ReadingListResponse {
     private String            description;
     private Boolean           isPublic;
     private Integer           bookCount;
-    private List<BookResponse> books;   // included on detail endpoint
+    private List<BookResponse> books;    // only on detail endpoint
     private LocalDateTime     createdAt;
 }

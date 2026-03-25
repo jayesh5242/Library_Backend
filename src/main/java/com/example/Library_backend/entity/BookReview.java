@@ -47,13 +47,5 @@ public class BookReview {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    // -------- AUTO TIMESTAMP --------
 
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        if (this.isApproved == null) {
-            this.isApproved = true;
-        }
-    }
 }
