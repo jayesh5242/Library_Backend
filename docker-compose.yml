@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: library_db
+    environment:
+      POSTGRES_DB: library_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - library_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Spring Boot Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: library_app
+    ports:
+      - "9090:9090"
+    environment:
+      # Database connection
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/library_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      # JPA settings
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: false
+      # JWT settings
+      JWT_SECRET: myProductionSecretKey123456789012345678901234
+      JWT_EXPIRATION: 86400000
+      JWT_REFRESH_EXPIRATION: 604800000
+      # App settings
+      APP_FRONTEND_URL: http://localhost:3000
+      APP_RESET_TOKEN_EXPIRY_MINUTES: 60
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - library_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  library_network:
+    driver: bridge
