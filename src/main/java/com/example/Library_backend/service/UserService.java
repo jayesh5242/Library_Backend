@@ -50,14 +50,6 @@ public class UserService {
                             DateTimeFormatter.ofPattern("MMMM yyyy")));
         }
 
-        if (user.getBranch() != null) {
-            response.setBranchId(
-                    user.getBranch().getId());
-            response.setBranchName(
-                    user.getBranch().getName());
-            response.setBranchDepartment(
-                    user.getBranch().getDepartment());
-        }
         return response;
     }
 

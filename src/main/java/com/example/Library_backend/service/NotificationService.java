@@ -93,7 +93,6 @@ public class NotificationService {
         }
     }
 
-
     public Notification createNotification(
             User user,
             String title,
