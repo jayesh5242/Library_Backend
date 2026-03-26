@@ -12,6 +12,8 @@ import com.example.Library_backend.exception.ResourceNotFoundException;
 import com.example.Library_backend.exception.UnauthorizedException;
 import com.example.Library_backend.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

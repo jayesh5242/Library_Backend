@@ -28,7 +28,14 @@ public class PurchaseRequestController {
 
     private final FacultyService facultyService;
 
-    // API 9: GET /api/purchase-requests/my — Faculty only
+    // ─────────────────────────────────────────────────────────
+    // API 9: GET /api/purchase-requests/my
+    // Faculty's own purchase requests
+    // Access: Faculty only
+    //
+    // Example: GET /api/purchase-requests/my
+    // Response: All purchase requests by logged-in faculty
+    // ─────────────────────────────────────────────────────────
     @GetMapping("/my")
     @Operation(summary = "Get faculty's own purchase requests")
     @PreAuthorize("hasRole('FACULTY')")
@@ -40,7 +47,17 @@ public class PurchaseRequestController {
                                 userDetails.getUsername())));
     }
 
-    // API 10: POST /api/purchase-requests — Faculty only
+    // ─────────────────────────────────────────────────────────
+    // API 10: POST /api/purchase-requests
+    // Submit a book purchase request
+    // Access: Faculty only
+    //
+    // Request Body:
+    // { "bookTitle": "Design Patterns", "author": "GoF",
+    //   "isbn": "978-0201633610", "reason": "Required for CS301",
+    //   "priority": "HIGH", "branchId": 1 }
+    // Response (201): Created purchase request
+    // ─────────────────────────────────────────────────────────
     @PostMapping
     @Operation(summary = "Submit a book purchase request")
     @PreAuthorize("hasRole('FACULTY')")
@@ -55,7 +72,13 @@ public class PurchaseRequestController {
                                 request, userDetails.getUsername())));
     }
 
-    // API 11: GET /api/purchase-requests/all — Librarian/Admin only
+    // ─────────────────────────────────────────────────────────
+    // API 11: GET /api/purchase-requests/all
+    // All purchase requests — Librarian/Admin only
+    //
+    // Example: GET /api/purchase-requests/all
+    // Response: All purchase requests with status
+    // ─────────────────────────────────────────────────────────
     @GetMapping("/all")
     @Operation(summary = "Get all purchase requests")
     @PreAuthorize("hasAnyRole('LIBRARIAN', 'SUPER_ADMIN')")
@@ -65,7 +88,14 @@ public class PurchaseRequestController {
                         facultyService.getAllPurchaseRequests()));
     }
 
-    // API 12: PUT /api/purchase-requests/{id}/approve — Admin only
+    // ─────────────────────────────────────────────────────────
+    // API 12: PUT /api/purchase-requests/{id}/approve
+    // Approve a purchase request
+    // Access: Admin only
+    //
+    // Example: PUT /api/purchase-requests/1/approve
+    // Response (200): Updated request with status APPROVED
+    // ─────────────────────────────────────────────────────────
     @PutMapping("/{id}/approve")
     @Operation(summary = "Approve a purchase request — Admin only")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
@@ -78,7 +108,14 @@ public class PurchaseRequestController {
                                 id, userDetails.getUsername())));
     }
 
-    // API 13: PUT /api/purchase-requests/{id}/reject — Admin only
+    // ─────────────────────────────────────────────────────────
+    // API 13: PUT /api/purchase-requests/{id}/reject
+    //  a purchase request with reason
+    // Access: Admin only
+    //
+    // Example: PUT /api/purchase-requests/1/reject?reason=Budget+constraints
+    // Response (200): Updated request with status REJECTED
+    // ─────────────────────────────────────────────────────────
     @PutMapping("/{id}/reject")
     @Operation(summary = "Reject a purchase request — Admin only")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
