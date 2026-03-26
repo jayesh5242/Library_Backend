@@ -1,6 +1,7 @@
 package com.example.Library_backend.entity;
 
 import com.example.Library_backend.enums.TransferStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
@@ -22,22 +23,27 @@ public class InterBranchTransfer {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id", nullable = false)
+    @JsonIgnore
     private Book book;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "from_branch_id")
+    @JsonIgnore
     private Branch fromBranch;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "to_branch_id")
+    @JsonIgnore
     private Branch toBranch;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requested_by")
+    @JsonIgnore
     private User requestedBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approved_by")
+    @JsonIgnore
     private User approvedBy;
 
     // -------- FIELDS --------

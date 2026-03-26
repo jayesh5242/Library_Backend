@@ -1,5 +1,6 @@
 package com.example.Library_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -23,6 +24,7 @@ public class ReadingList {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "faculty_id", nullable = false)
+    @JsonIgnore
     private User faculty;
 
     @Column(nullable = false, length = 200)
@@ -51,6 +53,7 @@ public class ReadingList {
             joinColumns = @JoinColumn(name = "reading_list_id"),
             inverseJoinColumns = @JoinColumn(name = "book_id")
     )
+    @JsonIgnore
     @Builder.Default
     private List<Book> books = new ArrayList<>();
 }
