@@ -5,12 +5,11 @@ import com.example.Library_backend.dto.request.authrequest.*;
 import com.example.Library_backend.dto.response.authresponse.AuthResponse;
 import com.example.Library_backend.dto.response.authresponse.RefreshTokenResponse;
 import com.example.Library_backend.dto.response.authresponse.UserProfileResponse;
-import com.example.Library_backend.entity.Branch;
+import com.example.Library_backend.dto.request.authrequest.*;
 import com.example.Library_backend.entity.TokenBlacklist;
 import com.example.Library_backend.entity.User;
 import com.example.Library_backend.enums.Role;
 import com.example.Library_backend.exception.ResourceNotFoundException;
-import com.example.Library_backend.repository.BranchRepository;
 import com.example.Library_backend.repository.TokenBlacklistRepository;
 import com.example.Library_backend.repository.UserRepository;
 import com.example.Library_backend.util.JwtUtils;
@@ -42,7 +41,6 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final TokenBlacklistRepository tokenBlacklistRepository;
     private final CurrentUserService currentUserService;
-    private final BranchRepository branchRepository;
 
     // ─── API 1: REGISTER ─────────────────────────────────────
     public String register(RegisterRequest request) {
@@ -80,28 +78,6 @@ public class AuthService {
         // 5. Generate email verification token
         String verifyToken = UUID.randomUUID().toString();
         user.setEmailVerifyToken(verifyToken);
-
-
-        // ── Assign branch if branchId provided ────────────
-// Only for LIBRARIAN role
-        if (request.getBranchId() != null) {
-
-            // Only librarians can be assigned to a branch
-            if (user.getRole() != Role.LIBRARIAN) {
-                throw new RuntimeException(
-                        "Only LIBRARIAN role can be "
-                                + "assigned to a branch!");
-            }
-
-            Branch branch = branchRepository
-                    .findById(request.getBranchId())
-                    .orElseThrow(() ->
-                            new ResourceNotFoundException(
-                                    "Branch not found with ID: "
-                                            + request.getBranchId()));
-
-            user.setBranch(branch);
-        }
 
         // 6. Save user to database
         userRepository.save(user);
