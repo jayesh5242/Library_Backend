@@ -1,6 +1,5 @@
 package com.example.Library_backend.repository;
 
-import com.example.Library_backend.entity.Book;
 import com.example.Library_backend.entity.BookInventory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
