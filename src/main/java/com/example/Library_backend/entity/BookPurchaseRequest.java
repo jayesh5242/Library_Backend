@@ -4,6 +4,7 @@ import com.example.Library_backend.entity.Branch;
 import com.example.Library_backend.entity.User;
 import com.example.Library_backend.enums.Priority;
 import com.example.Library_backend.enums.RequestStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -25,10 +26,12 @@ public class BookPurchaseRequest {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requested_by", nullable = false)
+    @JsonIgnore
     private User requestedBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "branch_id", nullable = false)
+    @JsonIgnore
     private Branch branch;
 
     @Column(name = "book_title", nullable = false, length = 200)
@@ -55,6 +58,7 @@ public class BookPurchaseRequest {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approved_by")
+    @JsonIgnore
     private User approvedBy;
 
     @Column(name = "admin_notes", columnDefinition = "TEXT")

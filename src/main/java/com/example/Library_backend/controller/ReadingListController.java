@@ -26,7 +26,15 @@ public class ReadingListController {
 
     private final FacultyService facultyService;
 
-    // API 1: GET /api/reading-lists — Public
+    // ─────────────────────────────────────────────────────────
+    // API 1: GET /api/reading-lists
+    // Browse all public reading lists
+    // Access: Public
+    //
+    // Example: GET /api/reading-lists
+    // Response: List of all public reading lists
+    // ─────────────────────────────────────────────────────────
+
     @GetMapping
     @Operation(summary = "Browse all public reading lists")
     public ResponseEntity<ApiResponse<List<ReadingListResponse>>> getAllPublicReadingLists() {
@@ -35,7 +43,14 @@ public class ReadingListController {
                         facultyService.getAllPublicReadingLists()));
     }
 
-    // API 2: GET /api/reading-lists/{id} — Public
+    // ─────────────────────────────────────────────────────────
+    // API 2: GET /api/reading-lists/{id}
+    // Get reading list with all books
+    // Access: Public
+    //
+    // Example: GET /api/reading-lists/1
+    // Response: Reading list details with full book list
+    // ─────────────────────────────────────────────────────────
     @GetMapping("/{id}")
     @Operation(summary = "Get reading list with all books")
     public ResponseEntity<ApiResponse<ReadingListResponse>> getReadingListById(
@@ -45,7 +60,14 @@ public class ReadingListController {
                         facultyService.getReadingListById(id)));
     }
 
-    // API 3: GET /api/reading-lists/my — Faculty only
+    // ─────────────────────────────────────────────────────────
+    // API 3: GET /api/reading-lists/my
+    // Faculty's own reading lists
+    // Access: Faculty only
+    //
+    // Example: GET /api/reading-lists/my
+    // Response: All reading lists created by logged-in faculty
+    // ─────────────────────────────────────────────────────────
     @GetMapping("/my")
     @Operation(summary = "Get faculty's own reading lists",
             security = @SecurityRequirement(name = "bearerAuth"))
@@ -58,7 +80,17 @@ public class ReadingListController {
                                 userDetails.getUsername())));
     }
 
-    // API 4: POST /api/reading-lists — Faculty only
+    // ─────────────────────────────────────────────────────────
+    // API 4: POST /api/reading-lists
+    // Create a new reading list
+    // Access: Faculty only
+    //
+    // Request Body:
+    // { "title": "Java Fundamentals", "subject": "CS101",
+    //   "semester": "Sem 3", "description": "...", "isPublic": true }
+    // Response (201): Created reading list
+    // ─────────────────────────────────────────────────────────
+
     @PostMapping
     @Operation(summary = "Create a new reading list",
             security = @SecurityRequirement(name = "bearerAuth"))
@@ -73,7 +105,15 @@ public class ReadingListController {
                                 request, userDetails.getUsername())));
     }
 
-    // API 5: PUT /api/reading-lists/{id} — Faculty only (own)
+    // ─────────────────────────────────────────────────────────
+    // API 5: PUT /api/reading-lists/{id}
+    // Update reading list details
+    // Access: Faculty only (own list)
+    //
+    // Example: PUT /api/reading-lists/1
+    // Request Body: { "title": "Updated Title", "subject": "CS102" }
+    // Response (200): Updated reading list
+    // ─────────────────────────────────────────────────────────
     @PutMapping("/{id}")
     @Operation(summary = "Update reading list details",
             security = @SecurityRequirement(name = "bearerAuth"))
@@ -88,7 +128,14 @@ public class ReadingListController {
                                 id, request, userDetails.getUsername())));
     }
 
-    // API 6: DELETE /api/reading-lists/{id} — Faculty (own) or Admin
+    // ─────────────────────────────────────────────────────────
+    // API 6: DELETE /api/reading-lists/{id}
+    // Delete a reading list
+    // Access: Faculty (own) or Admin
+    //
+    // Example: DELETE /api/reading-lists/1
+    // Response (200): { "success": true, "message": "Reading list deleted" }
+    // ─────────────────────────────────────────────────────────
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete a reading list",
             security = @SecurityRequirement(name = "bearerAuth"))
@@ -101,7 +148,14 @@ public class ReadingListController {
                 ApiResponse.success("Reading list deleted successfully", null));
     }
 
-    // API 7: POST /api/reading-lists/{id}/books — Faculty only (own)
+    // ─────────────────────────────────────────────────────────
+    // API 7: POST /api/reading-lists/{id}/books
+    // Add book to reading list
+    // Access: Faculty only (own list)
+    //
+    // Example: POST /api/reading-lists/1/books?bookId=5
+    // Response (200): Updated reading list with books
+    // ─────────────────────────────────────────────────────────
     @PostMapping("/{id}/books")
     @Operation(summary = "Add book to reading list",
             security = @SecurityRequirement(name = "bearerAuth"))
@@ -116,7 +170,14 @@ public class ReadingListController {
                                 id, bookId, userDetails.getUsername())));
     }
 
-    // API 8: DELETE /api/reading-lists/{id}/books/{bookId} — Faculty only
+    // ─────────────────────────────────────────────────────────
+    // API 8: DELETE /api/reading-lists/{id}/books/{bookId}
+    // Remove book from reading list
+    // Access: Faculty only (own list)
+    //
+    // Example: DELETE /api/reading-lists/1/books/5
+    // Response (200): Updated reading list without removed book
+    // ─────────────────────────────────────────────────────────
     @DeleteMapping("/{id}/books/{bookId}")
     @Operation(summary = "Remove book from reading list",
             security = @SecurityRequirement(name = "bearerAuth"))

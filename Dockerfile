@@ -1,5 +1,5 @@
 # Stage 1: Build the application
-FROM maven:3.9.5-amazoncorretto-17 AS builder
+FROM maven:3.9.5-amazoncorretto-21 AS builder
 
 # Set working directory inside container
 WORKDIR /app
@@ -18,7 +18,7 @@ RUN mvn clean package -DskipTests
 
 # ─────────────────────────────────────────────────────
 # Stage 2: Run the application (smaller final image)
-FROM amazoncorretto:17-alpine
+FROM amazoncorretto:21-alpine
 
 WORKDIR /app
 

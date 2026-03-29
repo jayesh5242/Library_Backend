@@ -2,6 +2,7 @@ package com.example.Library_backend.entity;
 
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -36,6 +37,7 @@ public class Branch {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "librarian_id")
+    @JsonIgnore
     private User librarian;
 
     @Column(name = "operating_hours", length = 100)

@@ -2,6 +2,7 @@ package com.example.Library_backend.entity;
 
 
 import com.example.Library_backend.enums.FineStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,6 +26,7 @@ public class Fine {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
     @Column(name = "days_overdue")
@@ -48,6 +50,7 @@ public class Fine {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "waived_by")
+    @JsonIgnore
     private User waivedBy;
 
     @Column(name = "created_at")

@@ -1,6 +1,7 @@
 package com.example.Library_backend.entity;
 
 import com.example.Library_backend.enums.Role;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -37,6 +38,7 @@ public class User {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "branch_id")
+    @JsonIgnore
     private Branch branch;
 
     @Column(name = "department")

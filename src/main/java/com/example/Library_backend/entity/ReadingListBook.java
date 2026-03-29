@@ -1,5 +1,6 @@
 package com.example.Library_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,11 +19,13 @@ public class ReadingListBook {
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reading_list_id", nullable = false)
+    @JsonIgnore
     private ReadingList readingList;
 
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "book_id", nullable = false)
+    @JsonIgnore
     private Book book;
 
     // -------- EXTRA FIELDS --------
