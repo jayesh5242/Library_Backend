@@ -1,5 +1,7 @@
 package com.example.Library_backend.repository;
 
+import com.example.Library_backend.dto.response.PageResponse;
+import com.example.Library_backend.dto.response.authresponse.PagedResponse;
 import com.example.Library_backend.entity.Book;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

@@ -3,7 +3,7 @@ package com.example.Library_backend.service;
 import com.example.Library_backend.dto.request.CreateReservationRequest;
 import com.example.Library_backend.dto.response.ApiResponse;
 import com.example.Library_backend.dto.response.ReservationResponse;
-import com.example.Library_backend.dto.response.PageResponse;
+import com.example.Library_backend.dto.response.authresponse.PagedResponse;
 import com.example.Library_backend.entity.Book;
 import com.example.Library_backend.entity.Reservation;
 import com.example.Library_backend.entity.User;
@@ -27,7 +27,9 @@ public class ReservationService {
     private final BookRepository bookRepo;
     private final UserRepository userRepo;
     private final HelperService helperService;
+    private final CurrentUserService currentUserService;
 
+    // ---------------- CREATE ----------------
     public ApiResponse<ReservationResponse> createReservation(CreateReservationRequest request) {
         try {
             Book book = bookRepo.findById(request.getBookId())
@@ -54,21 +56,18 @@ public class ReservationService {
         }
     }
 
-    public ApiResponse<PageResponse<ReservationResponse>> getMyReservations(Pageable pageable, Long userId) {
+    // ---------------- MY RESERVATIONS ----------------
+    public ApiResponse<PagedResponse<ReservationResponse>> getMyReservations(Pageable pageable, Long userId) {
         try {
-
-            Page<ReservationResponse> data = reservationRepo
-                    .findByUserId(userId, pageable)
-                    .map(this::mapToResponse);
-
-            return new ApiResponse<>(true, "Fetched reservations successfully", helperService.toPageResponse(data));
-
+            return new ApiResponse<>(true, "Fetched reservations successfully",
+                    toPaged(reservationRepo.findByUserId(userId, pageable), "Fetched reservations successfully"));
         } catch (Exception e) {
             e.printStackTrace();
             return new ApiResponse<>(false, "Failed to fetch reservations", null);
         }
     }
 
+    // ---------------- CANCEL ----------------
     public ApiResponse<Void> cancelReservation(Long id) {
         try {
             Reservation r = reservationRepo.findById(id)
@@ -85,33 +84,29 @@ public class ReservationService {
         }
     }
 
-    public ApiResponse<PageResponse<ReservationResponse>> getAllReservations(Pageable pageable) {
+    // ---------------- ALL ----------------
+    public ApiResponse<PagedResponse<ReservationResponse>> getAllReservations(Pageable pageable) {
         try {
-            Page<ReservationResponse> data = reservationRepo.findAll(pageable)
-                    .map(this::mapToResponse);
-
-            return new ApiResponse<>(true, "Fetched all reservations", helperService.toPageResponse(data));
-
+            return new ApiResponse<>(true, "Fetched all reservations",
+                    toPaged(reservationRepo.findAll(pageable), "Fetched all reservations"));
         } catch (Exception e) {
             e.printStackTrace();
             return new ApiResponse<>(false, "Failed to fetch reservations", null);
         }
     }
 
-    public ApiResponse<PageResponse<ReservationResponse>> getPendingByBranch(Long branchId, Pageable pageable) {
+    // ---------------- PENDING BY BRANCH ----------------
+    public ApiResponse<PagedResponse<ReservationResponse>> getPendingByBranch(Long branchId, Pageable pageable) {
         try {
-            Page<ReservationResponse> data = reservationRepo
-                    .findPendingByBranch(branchId, pageable)
-                    .map(this::mapToResponse);
-
-            return new ApiResponse<>(true, "Fetched pending reservations", helperService.toPageResponse(data));
-
+            return new ApiResponse<>(true, "Fetched pending reservations",
+                    toPaged(reservationRepo.findPendingByBranch(branchId, pageable), "Fetched pending reservations"));
         } catch (Exception e) {
             e.printStackTrace();
             return new ApiResponse<>(false, "Failed to fetch pending reservations", null);
         }
     }
 
+    // ---------------- APPROVE ----------------
     public ApiResponse<ReservationResponse> approveReservation(Long id) {
         try {
             Reservation r = reservationRepo.findById(id)
@@ -128,6 +123,7 @@ public class ReservationService {
         }
     }
 
+    // ---------------- READY ----------------
     public ApiResponse<ReservationResponse> markReady(Long id) {
         try {
             Reservation r = reservationRepo.findById(id)
@@ -144,6 +140,7 @@ public class ReservationService {
         }
     }
 
+    // ---------------- COLLECTED ----------------
     public ApiResponse<ReservationResponse> markCollected(Long id) {
         try {
             Reservation r = reservationRepo.findById(id)
@@ -160,6 +157,7 @@ public class ReservationService {
         }
     }
 
+    // ---------------- EXPIRE ----------------
     public ApiResponse<ReservationResponse> expireReservation(Long id) {
         try {
             Reservation r = reservationRepo.findById(id)
@@ -176,27 +174,33 @@ public class ReservationService {
         }
     }
 
-    public ApiResponse<PageResponse<ReservationResponse>> getByBook(Long bookId, Pageable pageable) {
+    // ---------------- BY BOOK ----------------
+    public ApiResponse<PagedResponse<ReservationResponse>> getByBook(Long bookId, Pageable pageable) {
         try {
-            Page<ReservationResponse> data = reservationRepo
-                    .findByBookId(bookId, pageable)
-                    .map(this::mapToResponse);
-
-            return new ApiResponse<>(true, "Fetched book reservations", helperService.toPageResponse(data));
-
+            return new ApiResponse<>(true, "Fetched book reservations",
+                    toPaged(reservationRepo.findByBookId(bookId, pageable), "Fetched book reservations"));
         } catch (Exception e) {
             e.printStackTrace();
             return new ApiResponse<>(false, "Failed to fetch reservations", null);
         }
     }
 
+    // ---------------- PAGINATION HELPER ----------------
+    private PagedResponse<ReservationResponse> toPaged(Page<Reservation> page, String msg) {
+        return helperService.toPagedResponse(
+                page.map(this::mapToResponse),
+                msg
+        );
+    }
+
+    // ---------------- MAPPER ----------------
     private ReservationResponse mapToResponse(Reservation r) {
         return ReservationResponse.builder()
                 .id(r.getId())
                 .bookId(r.getBook().getId())
                 .userId(r.getUser().getId())
-                .bookName(r.getBook().getTitle())   // adjust field name if different
-                .userName(r.getUser().getFullName())    // adjust field name if different
+                .bookName(r.getBook().getTitle())
+                .userName(r.getUser().getFullName())
                 .status(r.getStatus())
                 .reservedAt(r.getReservedAt())
                 .expiryDate(r.getExpiryDate())
@@ -204,6 +208,6 @@ public class ReservationService {
     }
 
     private Long getLoggedInUserId() {
-        return 1L; // replace with actual auth
+        return currentUserService.getCurrentUserId(); // replace with actual auth
     }
 }

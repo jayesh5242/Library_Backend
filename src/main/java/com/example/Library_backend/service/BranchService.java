@@ -16,10 +16,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
  
 @Service
@@ -31,6 +33,7 @@ public class BranchService {
     private final BorrowTransactionRepository borrowTransactionRepository;
     private final FineRepository fineRepository;
     private final UserRepository userRepository;
+    private final HelperService helperService;
     /**
      * GET /api/branches
      * Fetches only active branches (is_active = true).
@@ -62,6 +65,7 @@ public class BranchService {
      * Fetches paginated inventory records for the branch.
      * Maps each inventory record to BookResponse.
      */
+    @Transactional(readOnly = true)
     public PagedResponse<BookResponse> getBooksInBranch(
             Long branchId, int page, int size) {
 
@@ -76,9 +80,8 @@ public class BranchService {
                 bookInventoryRepository.findByBranchId(branchId, pageable);
 
         // Step 3: Map each inventory to BookResponse
-        List<BookResponse> content = inventoryPage.getContent()
-                .stream()
-                .map(inv -> {
+        return helperService.toPagedResponse(
+                inventoryPage.map(inv -> {
                     BookResponse res = new BookResponse();
                     res.setId(inv.getBook().getId());
                     res.setTitle(inv.getBook().getTitle());
@@ -94,22 +97,12 @@ public class BranchService {
                     res.setCoverImageUrl(inv.getBook().getCoverImageUrl());
                     res.setCreatedAt(inv.getBook().getCreatedAt());
 
-                    // Branch-specific copy counts
                     res.setTotalCopies(inv.getTotalCopies());
                     res.setAvailableCopies(inv.getAvailableCopies());
                     return res;
-                })
-                .collect(Collectors.toList());
-
-        // Step 4: Build paginated response
-        return PagedResponse.<BookResponse>builder()
-                .content(content)
-                .pageNumber(inventoryPage.getNumber())
-                .pageSize(inventoryPage.getSize())
-                .totalElements(inventoryPage.getTotalElements())
-                .totalPages(inventoryPage.getTotalPages())
-                .lastPage(inventoryPage.isLast())
-                .build();
+                }),
+                "Books in branch fetched successfully"
+        );
     }
 
     /**
@@ -118,6 +111,7 @@ public class BranchService {
      * Fetches all inventory records for the branch.
      * Maps each to InventoryResponse with borrowed count.
      */
+    @Transactional(readOnly = true)
     public List<InventoryResponse> getBranchInventory(Long branchId) {
 
         // Step 1: Check branch exists
@@ -159,6 +153,7 @@ public class BranchService {
      * - Fine amounts
      * - User count
      */
+    @Transactional(readOnly = true)
     public BranchStatsResponse getBranchStats(Long branchId) {
 
         // Step 1: Check branch exists
@@ -167,7 +162,9 @@ public class BranchService {
                         "Branch not found with id: " + branchId));
 
         // Step 2: Inventory stats
-        Integer totalBooks     = bookInventoryRepository.sumTotalCopiesByBranchId(branchId);
+        Integer totalBooks = Optional.ofNullable(
+                bookInventoryRepository.sumTotalCopiesByBranchId(branchId)
+        ).orElse(0);
         Integer availableBooks = bookInventoryRepository.sumAvailableCopiesByBranchId(branchId);
         Integer borrowedBooks  = (totalBooks != null && availableBooks != null)
                 ? totalBooks - availableBooks : 0;
@@ -352,6 +349,7 @@ public class BranchService {
      * Fetches all OVERDUE transactions for the branch.
      * Calculates days overdue and fine amount for each.
      */
+    @Transactional(readOnly = true)
     public List<OverdueResponse> getOverdueBooks(Long branchId) {
 
         // Step 1: Check branch exists

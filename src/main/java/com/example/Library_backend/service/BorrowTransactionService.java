@@ -4,12 +4,9 @@ import com.example.Library_backend.dto.request.IssueBookRequest;
 import com.example.Library_backend.dto.request.ReturnBookRequest;
 import com.example.Library_backend.dto.response.ApiResponse;
 import com.example.Library_backend.dto.response.BorrowResponse;
-import com.example.Library_backend.dto.response.ApiResponse;
-import com.example.Library_backend.dto.response.BorrowResponse;
-import com.example.Library_backend.dto.response.PageResponse;
-import com.example.Library_backend.dto.response.PageResponse;
+import com.example.Library_backend.dto.response.authresponse.PagedResponse;
 import com.example.Library_backend.enums.TransactionStatus;
-import org.springframework.data.domain.Page;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Pageable;
 import com.example.Library_backend.entity.*;
 import com.example.Library_backend.repository.*;
@@ -20,48 +17,40 @@ import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class BorrowTransactionService {
 
     private final BorrowTransactionRepository borrowRepo;
     private final BookRepository bookRepo;
-    private final UserRepository userRepo;
     private final HelperService helperService;
+    private final UserRepository userRepo;
 
-    public ApiResponse<?> issueBook(IssueBookRequest request) {
-        try{
+    public ApiResponse<BorrowResponse> issueBook(IssueBookRequest request) {
+        try {
+            Book book = bookRepo.findById(request.getBookId())
+                    .orElseThrow(() -> new RuntimeException("Book not found"));
 
-            if (!bookRepo.existsById(request.getBookId())) {
-                return new ApiResponse<>(false, "Book not found", null);
+            User user = userRepo.findById(request.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            if (!book.getAvailable()) {
+                throw new RuntimeException("Book not available");
             }
-            if (!userRepo.existsById(request.getUserId())) {
-                return new ApiResponse<>(false, "User not found", null);
-            }
-            Book book = bookRepo.findById(request.getBookId()).get();
 
-            User user = userRepo.findById(request.getUserId()).get();
-            if (book.getAvailable()) {
-                BorrowTransaction txn = BorrowTransaction.builder()
-                        .book(book)
-                        .user(user)
-                        .issueDate(LocalDate.now())
-                        .dueDate(LocalDate.now().plusDays(14))
-                        .status(TransactionStatus.BORROWED)
-                        .branch(user.getBranch())
-                        .build();
+            BorrowTransaction txn = BorrowTransaction.builder()
+                    .book(book)
+                    .user(user)
+                    .issueDate(LocalDate.now())
+                    .dueDate(LocalDate.now().plusDays(14))
+                    .status(TransactionStatus.BORROWED)
+                    .build();
 
-                book.setAvailable(false);
+            book.setAvailable(false);
 
-                borrowRepo.save(txn);
-                bookRepo.save(book);
+            borrowRepo.save(txn);
+            bookRepo.save(book);
 
-                return new ApiResponse<>(true, "Book issued successfully", mapToResponse(txn));
-            }else{
-                return new ApiResponse<>(
-                        false,
-                        "Book not available",
-                        null
-                );
-            }
+            return new ApiResponse<>(true, "Book issued successfully", mapToResponse(txn));
         } catch (Exception e) {
 
             e.printStackTrace();
@@ -73,19 +62,12 @@ public class BorrowTransactionService {
             );
         }
     }
+
     // ---------------- RETURN BOOK ----------------
     public ApiResponse<BorrowResponse> returnBook(ReturnBookRequest request) {
         try {
-
-            if (!borrowRepo.existsById(request.getTransactionId())) {
-                return new ApiResponse<>(false, "Transaction not found", null);
-            }
-
-            BorrowTransaction txn = borrowRepo.findById(request.getTransactionId()).get();
-
-            if (txn.getStatus() != TransactionStatus.BORROWED) {
-                return new ApiResponse<>(false, "Book is not in borrowed state", null);
-            }
+            BorrowTransaction txn = borrowRepo.findById(request.getTransactionId())
+                    .orElseThrow(() -> new RuntimeException("Transaction not found"));
 
             txn.setReturnDate(LocalDate.now());
             txn.setStatus(TransactionStatus.RETURNED);
@@ -107,15 +89,11 @@ public class BorrowTransactionService {
     // ---------------- RENEW BOOK ----------------
     public ApiResponse<BorrowResponse> renewBook(Long id) {
         try {
-
-            if (!borrowRepo.existsById(id)) {
-                return new ApiResponse<>(false, "Transaction not found", null);
-            }
-
-            BorrowTransaction txn = borrowRepo.findById(id).get();
+            BorrowTransaction txn = borrowRepo.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Transaction not found"));
 
             if (txn.getStatus() != TransactionStatus.BORROWED) {
-                return new ApiResponse<>(false, "Only borrowed books can be renewed", null);
+                throw new RuntimeException("Only borrowed books can be renewed");
             }
 
             txn.setDueDate(txn.getDueDate().plusDays(7));
@@ -131,14 +109,16 @@ public class BorrowTransactionService {
     }
 
     // ---------------- MY CURRENT BORROWED BOOKS ----------------
-    public ApiResponse<PageResponse<BorrowResponse>> getMyBorrowedBooks(Pageable pageable, Long userId) {
+    public ApiResponse<PagedResponse<BorrowResponse>> getMyBorrowedBooks(Pageable pageable, Long userId) {
         try {
 
-            Page<BorrowResponse> data = borrowRepo
-                    .findByUserIdAndStatus(userId, TransactionStatus.BORROWED, pageable)
-                    .map(this::mapToResponse);
-
-            return new ApiResponse<>(true, "Fetched borrowed books successfully", helperService.toPageResponse(data));
+            PagedResponse<BorrowResponse> data = helperService.toPagedResponse(
+                    borrowRepo
+                            .findByUserIdAndStatus(userId, TransactionStatus.BORROWED, pageable)
+                            .map(this::mapToResponse),
+                    "Fetched borrowed books successfully"
+            );
+            return new ApiResponse<>(true, "Fetched borrowed books successfully", data);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -147,29 +127,32 @@ public class BorrowTransactionService {
     }
 
     // ---------------- MY BORROW HISTORY ----------------
-    public ApiResponse<PageResponse<BorrowResponse>> getMyBorrowHistory(Pageable pageable,Long userId) {
+    public ApiResponse<PagedResponse<BorrowResponse>> getMyBorrowHistory(Pageable pageable, Long userId) {
         try {
 
-            Page<BorrowResponse> data = borrowRepo
-                    .findByUserId(userId, pageable)
-                    .map(this::mapToResponse);
+            PagedResponse<BorrowResponse> data = helperService.toPagedResponse(
+                    borrowRepo
+                            .findByUserId(userId, pageable)
+                            .map(this::mapToResponse),
+                    "Fetched borrow history successfully"
+            );
 
-            return new ApiResponse<>(true, "Fetched borrow history successfully",  helperService.toPageResponse(data));
+            return new ApiResponse<>(true, "Fetched borrow history successfully", data);
 
         } catch (Exception e) {
             e.printStackTrace();
             return new ApiResponse<>(false, "Failed to fetch borrow history", null);
         }
     }
-
     // ---------------- ALL TRANSACTIONS ----------------
-    public ApiResponse<PageResponse<BorrowResponse>> getAllTransactions(Pageable pageable) {
+    public ApiResponse<PagedResponse<BorrowResponse>> getAllTransactions(Pageable pageable) {
         try {
-            Page<BorrowResponse> data = borrowRepo.findAll(pageable)
-                    .map(this::mapToResponse);
-
-            return new ApiResponse<>(true, "Fetched all transactions successfully",  helperService.toPageResponse(data));
-
+            PagedResponse<BorrowResponse> data = helperService.toPagedResponse(
+                    borrowRepo.findAll(pageable)
+                            .map(this::mapToResponse),
+                    "Fetched all transactions successfully"
+            );
+            return new ApiResponse<>(true, "Fetched transactions successfully", data);
         } catch (Exception e) {
             e.printStackTrace();
             return new ApiResponse<>(false, "Failed to fetch transactions", null);
@@ -177,13 +160,17 @@ public class BorrowTransactionService {
     }
 
     // ---------------- ALL OVERDUE ----------------
-    public ApiResponse<PageResponse<BorrowResponse>> getAllOverdue(Pageable pageable) {
+    public ApiResponse<PagedResponse<BorrowResponse>> getAllOverdue(Pageable pageable) {
         try {
-            Page<BorrowResponse> data = borrowRepo
-                    .findOverdue(LocalDate.now(), pageable)
-                    .map(this::mapToResponse);
 
-            return new ApiResponse<>(true, "Fetched overdue books successfully",  helperService.toPageResponse(data));
+            PagedResponse<BorrowResponse> data = helperService.toPagedResponse(
+                    borrowRepo
+                            .findOverdue(LocalDate.now(), pageable)
+                            .map(this::mapToResponse),
+                    "Fetched overdue books successfully"
+            );
+
+            return new ApiResponse<>(true, "Fetched overdue books successfully", data);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -192,13 +179,17 @@ public class BorrowTransactionService {
     }
 
     // ---------------- OVERDUE BY BRANCH ----------------
-    public ApiResponse<PageResponse<BorrowResponse>> getOverdueByBranch(Long branchId, Pageable pageable) {
+    public ApiResponse<PagedResponse<BorrowResponse>> getOverdueByBranch(Long branchId, Pageable pageable) {
         try {
-            Page<BorrowResponse> data = borrowRepo
-                    .findOverdueByBranch(branchId, LocalDate.now(), pageable)
-                    .map(this::mapToResponse);
 
-            return new ApiResponse<>(true, "Fetched branch overdue books successfully",  helperService.toPageResponse(data));
+            PagedResponse<BorrowResponse> data = helperService.toPagedResponse(
+                    borrowRepo
+                            .findOverdueByBranch(branchId, LocalDate.now(), pageable)
+                            .map(this::mapToResponse),
+                    "Fetched branch overdue books successfully"
+            );
+
+            return new ApiResponse<>(true, "Fetched branch overdue books successfully", data);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -209,12 +200,8 @@ public class BorrowTransactionService {
     // ---------------- GET BY ID ----------------
     public ApiResponse<BorrowResponse> getTransactionById(Long id) {
         try {
-
-            if (!borrowRepo.existsById(id)) {
-                return new ApiResponse<>(false, "Transaction not found", null);
-            }
-
-            BorrowTransaction txn = borrowRepo.findById(id).get();
+            BorrowTransaction txn = borrowRepo.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Transaction not found"));
 
             return new ApiResponse<>(true, "Fetched transaction successfully", mapToResponse(txn));
 
@@ -227,16 +214,8 @@ public class BorrowTransactionService {
     // ---------------- MARK AS LOST ----------------
     public ApiResponse<BorrowResponse> markAsLost(Long id) {
         try {
-
-            if (!borrowRepo.existsById(id)) {
-                return new ApiResponse<>(false, "Transaction not found", null);
-            }
-
-            BorrowTransaction txn = borrowRepo.findById(id).get();
-
-            if (txn.getStatus() == TransactionStatus.RETURNED) {
-                return new ApiResponse<>(false, "Returned book cannot be marked as lost", null);
-            }
+            BorrowTransaction txn = borrowRepo.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Transaction not found"));
 
             txn.setStatus(TransactionStatus.LOST);
 
@@ -251,20 +230,23 @@ public class BorrowTransactionService {
     }
 
     // ---------------- USER HISTORY ----------------
-    public ApiResponse<PageResponse<BorrowResponse>> getUserHistory(Long userId, Pageable pageable) {
+    public ApiResponse<PagedResponse<BorrowResponse>> getUserHistory(Long userId, Pageable pageable) {
         try {
-            Page<BorrowResponse> data = borrowRepo
-                    .findByUserId(userId, pageable)
-                    .map(this::mapToResponse);
 
-            return new ApiResponse<>(true, "Fetched user history successfully",  helperService.toPageResponse(data));
+            PagedResponse<BorrowResponse> data = helperService.toPagedResponse(
+                    borrowRepo
+                            .findByUserId(userId, pageable)
+                            .map(this::mapToResponse),
+                    "Fetched user history successfully"
+            );
+
+            return new ApiResponse<>(true, "Fetched user history successfully", data);
 
         } catch (Exception e) {
             e.printStackTrace();
             return new ApiResponse<>(false, "Failed to fetch user history", null);
         }
     }
-
     private BorrowResponse mapToResponse(BorrowTransaction txn) {
         return BorrowResponse.builder()
                 .id(txn.getId())

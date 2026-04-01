@@ -2,13 +2,12 @@ package com.example.Library_backend.service;
 
 import com.example.Library_backend.dto.response.ApiResponse;
 import com.example.Library_backend.dto.response.FineResponse;
-import com.example.Library_backend.dto.response.PageResponse;
+import com.example.Library_backend.dto.response.authresponse.PagedResponse;
 import com.example.Library_backend.entity.Fine;
 import com.example.Library_backend.enums.FineStatus;
 import com.example.Library_backend.repository.FineRepository;
 import com.example.Library_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -25,13 +24,16 @@ public class FineService {
     private final UserRepository userRepo;
     private final HelperService helperService;
 
-    public ApiResponse<PageResponse<FineResponse>> my(Pageable pageable, Long userId) {
+    public ApiResponse<PagedResponse<FineResponse>> my(Pageable pageable, Long userId) {
         try {
 
-            Page<FineResponse> data = repo.findByUserIdWithPagination(userId, pageable)
-                    .map(this::map);
+            PagedResponse<FineResponse> data = helperService.toPagedResponse(
+                    repo.findByUserIdWithPagination(userId, pageable)
+                            .map(this::map),
+                    "Fetched fines"
+            );
 
-            return new ApiResponse<>(true, "Fetched fines", helperService.toPageResponse(data));
+            return new ApiResponse<>(true, "Fetched fines", data);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -55,12 +57,16 @@ public class FineService {
         }
     }
 
-    public ApiResponse<PageResponse<FineResponse>> all(Pageable pageable) {
+    public ApiResponse<PagedResponse<FineResponse>> all(Pageable pageable) {
         try {
-            Page<FineResponse> data = repo.findAll(pageable)
-                    .map(this::map);
 
-            return new ApiResponse<>(true, "All fines",  helperService.toPageResponse(data));
+            PagedResponse<FineResponse> data = helperService.toPagedResponse(
+                    repo.findAll(pageable)
+                            .map(this::map),
+                    "All fines"
+            );
+
+            return new ApiResponse<>(true, "All fines", data);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -68,12 +74,16 @@ public class FineService {
         }
     }
 
-    public ApiResponse<PageResponse<FineResponse>> pending(Pageable pageable) {
+    public ApiResponse<PagedResponse<FineResponse>> pending(Pageable pageable) {
         try {
-            Page<FineResponse> data = repo.findByStatus(FineStatus.PENDING, pageable)
-                    .map(this::map);
 
-            return new ApiResponse<>(true, "Pending fines",  helperService.toPageResponse(data));
+            PagedResponse<FineResponse> data = helperService.toPagedResponse(
+                    repo.findByStatus(FineStatus.PENDING, pageable)
+                            .map(this::map),
+                    "Pending fines"
+            );
+
+            return new ApiResponse<>(true, "Pending fines", data);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -81,12 +91,16 @@ public class FineService {
         }
     }
 
-    public ApiResponse<PageResponse<FineResponse>> byBranch(Long branchId, Pageable pageable) {
+    public ApiResponse<PagedResponse<FineResponse>> byBranch(Long branchId, Pageable pageable) {
         try {
-            Page<FineResponse> data = repo.findByBranch(branchId, pageable)
-                    .map(this::map);
 
-            return new ApiResponse<>(true, "Branch fines",  helperService.toPageResponse(data));
+            PagedResponse<FineResponse> data = helperService.toPagedResponse(
+                    repo.findByBranch(branchId, pageable)
+                            .map(this::map),
+                    "Branch fines"
+            );
+
+            return new ApiResponse<>(true, "Branch fines", data);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -173,12 +187,16 @@ public class FineService {
         }
     }
 
-    public ApiResponse<PageResponse<FineResponse>> byUser(Long userId, Pageable pageable) {
+    public ApiResponse<PagedResponse<FineResponse>> byUser(Long userId, Pageable pageable) {
         try {
-            Page<FineResponse> data = repo.findByUserIdWithPagination(userId, pageable)
-                    .map(this::map);
 
-            return new ApiResponse<>(true, "User fines",  helperService.toPageResponse(data));
+            PagedResponse<FineResponse> data = helperService.toPagedResponse(
+                    repo.findByUserIdWithPagination(userId, pageable)
+                            .map(this::map),
+                    "User fines"
+            );
+
+            return new ApiResponse<>(true, "User fines", data);
 
         } catch (Exception e) {
             e.printStackTrace();

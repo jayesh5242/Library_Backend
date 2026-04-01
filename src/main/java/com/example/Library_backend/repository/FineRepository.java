@@ -1,5 +1,6 @@
 package com.example.Library_backend.repository;
 
+import com.example.Library_backend.dto.response.authresponse.PagedResponse;
 import com.example.Library_backend.entity.Fine;
 import com.example.Library_backend.enums.FineStatus;
 import org.springframework.data.domain.Page;

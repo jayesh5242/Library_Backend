@@ -2,8 +2,8 @@ package com.example.Library_backend.controller;
 
 import com.example.Library_backend.dto.request.CreateTransferRequest;
 import com.example.Library_backend.dto.response.ApiResponse;
-import com.example.Library_backend.dto.response.PageResponse;
 import com.example.Library_backend.dto.response.TransferResponse;
+import com.example.Library_backend.dto.response.authresponse.PagedResponse;
 import com.example.Library_backend.service.CurrentUserService;
 import com.example.Library_backend.service.InterBranchTransferService;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +29,7 @@ public class InterBranchTransferController {
     }
 
     @GetMapping("/my")
-    public ResponseEntity<ApiResponse<PageResponse<TransferResponse>>> my(Pageable pageable) {
+    public ResponseEntity<ApiResponse<PagedResponse<TransferResponse>>> my(Pageable pageable) {
         try {
             Long userId = currentUserService.getCurrentUserId();
             return ResponseEntity.ok(service.my(pageable,userId));
@@ -39,7 +39,7 @@ public class InterBranchTransferController {
     }
 
     @GetMapping("/outgoing/{branchId}")
-    public ResponseEntity<ApiResponse<PageResponse<TransferResponse>>> outgoing(@PathVariable Long branchId, Pageable pageable) {
+    public ResponseEntity<ApiResponse<PagedResponse<TransferResponse>>> outgoing(@PathVariable Long branchId, Pageable pageable) {
         try {
             return ResponseEntity.ok(service.outgoing(branchId, pageable));
         } catch (Exception e) {
@@ -48,7 +48,7 @@ public class InterBranchTransferController {
     }
 
     @GetMapping("/incoming/{branchId}")
-    public ResponseEntity<ApiResponse<PageResponse<TransferResponse>>> incoming(@PathVariable Long branchId, Pageable pageable) {
+    public ResponseEntity<ApiResponse<PagedResponse<TransferResponse>>> incoming(@PathVariable Long branchId, Pageable pageable) {
         try {
             return ResponseEntity.ok(service.incoming(branchId, pageable));
         } catch (Exception e) {
@@ -95,7 +95,7 @@ public class InterBranchTransferController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse<PageResponse<TransferResponse>>> all(Pageable pageable) {
+    public ResponseEntity<ApiResponse<PagedResponse<TransferResponse>>> all(Pageable pageable) {
         try {
             return ResponseEntity.ok(service.all(pageable));
         } catch (Exception e) {

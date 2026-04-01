@@ -1,6 +1,5 @@
 package com.example.Library_backend.service;
 
-
 import com.example.Library_backend.dto.request.BookRequest;
 import com.example.Library_backend.dto.request.BookReviewRequest;
 import com.example.Library_backend.dto.response.*;
@@ -19,19 +18,27 @@ import com.example.Library_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
- 
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.stream.Collectors;
- 
+
 @Service
 @RequiredArgsConstructor
 public class BookService {
- 
-    private final BookRepository bookRepository;
-    private final BookInventoryRepository  bookInventoryRepository;
-    private final BookReviewRepository bookReviewRepository;
-    private final UserRepository userRepository;
 
+    private final BookRepository           bookRepository;
+    private final BookInventoryRepository  bookInventoryRepository;
+    private final BookReviewRepository     bookReviewRepository;
+    private final UserRepository           userRepository;
+
+    // ─────────────────────────────────────────────────────────
+    // API 1: GET /api/books
+    // @Transactional keeps Hibernate session open while
+    // mapToResponse() accesses book.getInventories() and
+    // book.getReviews() (lazy collections)
+    // ─────────────────────────────────────────────────────────
+    @Transactional(readOnly = true)
     public PagedResponse<BookResponse> getAllBooks(
             int page, int size, String sortBy, String sortDir,
             String title, String author, String category, String subject) {
@@ -47,16 +54,17 @@ public class BookService {
 
         Page<Book> books = hasFilter
                 ? bookRepository.filterBooks(
-                blankToNull(title),
-                blankToNull(author),
-                blankToNull(category),
-                blankToNull(subject),
-                pageable)
+                blankToNull(title), blankToNull(author),
+                blankToNull(category), blankToNull(subject), pageable)
                 : bookRepository.findAll(pageable);
 
         return buildPagedResponse(books);
     }
 
+    // ─────────────────────────────────────────────────────────
+    // API 2: GET /api/books/{id}
+    // ─────────────────────────────────────────────────────────
+    @Transactional(readOnly = true)
     public BookResponse getBookById(Long id) {
         Book book = bookRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -64,48 +72,70 @@ public class BookService {
         return mapToResponse(book);
     }
 
+    // ─────────────────────────────────────────────────────────
+    // API 3: GET /api/books/search
+    // ─────────────────────────────────────────────────────────
+    @Transactional(readOnly = true)
+    public PagedResponse<BookResponse> searchBooks(String q, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Book> books = bookRepository.searchBooks(q, pageable);
+        return buildPagedResponse(books);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // API 4: GET /api/books/popular
+    // ─────────────────────────────────────────────────────────
+    @Transactional(readOnly = true)
     public List<BookResponse> getPopularBooks() {
         return bookRepository.findTopBorrowedBooks()
-                .stream()
-                .map(this::mapToResponse)
+                .stream().map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
+    // ─────────────────────────────────────────────────────────
+    // API 5: GET /api/books/trending
+    // ─────────────────────────────────────────────────────────
+    @Transactional(readOnly = true)
     public List<BookResponse> getTrendingBooks() {
         return bookRepository.findTrendingBooks()
-                .stream()
-                .map(this::mapToResponse)
+                .stream().map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
+    // ─────────────────────────────────────────────────────────
+    // API 6: GET /api/books/new-arrivals
+    // ─────────────────────────────────────────────────────────
+    @Transactional(readOnly = true)
     public List<BookResponse> getNewArrivals() {
         return bookRepository.findNewArrivals()
-                .stream()
-                .map(this::mapToResponse)
+                .stream().map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
+    // ─────────────────────────────────────────────────────────
+    // API 7: GET /api/books/category/{category}
+    // ─────────────────────────────────────────────────────────
+    @Transactional(readOnly = true)
     public PagedResponse<BookResponse> getBooksByCategory(
             String category, int page, int size) {
-
         Pageable pageable = PageRequest.of(page, size);
         Page<Book> books = bookRepository.findByCategory(category, pageable);
         return buildPagedResponse(books);
     }
 
-
+    // ─────────────────────────────────────────────────────────
+    // API 8: GET /api/books/{id}/availability
+    // ─────────────────────────────────────────────────────────
+    @Transactional(readOnly = true)
     public BookAvailabilityResponse getBookAvailability(Long bookId) {
 
-        // Step 1: Find the book
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Book not found with id: " + bookId));
 
-        // Step 2: Get all inventory records for this book
         List<BookInventory> inventories =
                 bookInventoryRepository.findByBookId(bookId);
 
-        // Step 3: Build per-branch breakdown
         List<BookAvailabilityResponse.BranchStock> branches = inventories.stream()
                 .map(inv -> BookAvailabilityResponse.BranchStock.builder()
                         .branchId(inv.getBranch().getId())
@@ -118,13 +148,11 @@ public class BookService {
                         .build())
                 .collect(Collectors.toList());
 
-        // Step 4: Compute totals across all branches
         int totalCopies = inventories.stream()
                 .mapToInt(BookInventory::getTotalCopies).sum();
         int availableCopies = inventories.stream()
                 .mapToInt(BookInventory::getAvailableCopies).sum();
 
-        // Step 5: Build and return response
         return BookAvailabilityResponse.builder()
                 .bookId(book.getId())
                 .title(book.getTitle())
@@ -136,19 +164,19 @@ public class BookService {
                 .build();
     }
 
-
+    // ─────────────────────────────────────────────────────────
+    // API 9: GET /api/books/{id}/reviews
+    // ─────────────────────────────────────────────────────────
+    @Transactional(readOnly = true)
     public List<ReviewResponse> getBookReviews(Long bookId) {
 
-        // Check book exists first
         bookRepository.findById(bookId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Book not found with id: " + bookId));
 
-        // Fetch only approved reviews
         List<BookReview> reviews =
                 bookReviewRepository.findByBookIdAndIsApprovedTrue(bookId);
 
-        // Map to response
         return reviews.stream()
                 .map(review -> ReviewResponse.builder()
                         .id(review.getId())
@@ -163,239 +191,17 @@ public class BookService {
                 .collect(Collectors.toList());
     }
 
-    public BookResponse updateBook(Long id, BookRequest request) {
-
-        // Step 1: Find existing book
-        Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Book not found with id: " + id));
-
-        // Step 2: If ISBN changed, check it's not taken by another book
-        if (!book.getIsbn().equals(request.getIsbn())
-                && bookRepository.existsByIsbn(request.getIsbn())) {
-            throw new DuplicateResourceException(
-                    "ISBN " + request.getIsbn() + " is already used by another book");
-        }
-
-        // Step 3: Update all fields
-        book.setTitle(request.getTitle());
-        book.setAuthor(request.getAuthor());
-        book.setIsbn(request.getIsbn());
-        book.setPublisher(request.getPublisher());
-        book.setEdition(request.getEdition());
-        book.setYear(request.getYear());
-        book.setCategory(request.getCategory());
-        book.setSubject(request.getSubject());
-        book.setDescription(request.getDescription());
-        book.setCoverImageUrl(request.getCoverImageUrl());
-        book.setLanguage(request.getLanguage() != null
-                ? request.getLanguage() : "English");
-        book.setTotalPages(request.getTotalPages());
-
-        // Step 4: Save and return
-        return mapToResponse(bookRepository.save(book));
-    }
-
-    public void deleteBook(Long id) {
-
-        // Step 1: Find existing book — throw 404 if not found
-        Book book = bookRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Book not found with id: " + id));
-
-        // Step 2: Delete book
-        // CascadeType.ALL on inventories + reviews
-        // means they get deleted automatically
-        bookRepository.delete(book);
-    }
-
-    public ReviewResponse submitReview(
-            Long bookId, BookReviewRequest request, String userEmail) {
-
-        // Step 1: Find book
-        Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Book not found with id: " + bookId));
-
-        // Step 2: Find logged-in user
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "User not found"));
-
-        // Step 3: Check duplicate review
-        if (bookReviewRepository.existsByBookIdAndUserId(bookId, user.getId())) {
-            throw new DuplicateResourceException(
-                    "You have already reviewed this book");
-        }
-
-        // Step 4: Build and save review
-        BookReview review = BookReview.builder()
-                .book(book)
-                .user(user)
-                .rating(request.getRating())
-                .reviewText(request.getReviewText())
-                .isApproved(true)
-                .build();
-
-        BookReview saved = bookReviewRepository.save(review);
-
-        // Step 5: Return response
-        return ReviewResponse.builder()
-                .id(saved.getId())
-                .bookId(saved.getBook().getId())
-                .userId(saved.getUser().getId())
-                .userName(saved.getUser().getFullName())
-                .rating(saved.getRating())
-                .reviewText(saved.getReviewText())
-                .isApproved(saved.getIsApproved())
-                .createdAt(saved.getCreatedAt())
-                .build();
-    }
-
-
-    public ReviewResponse updateReview(
-            Long bookId, Long reviewId,
-            BookReviewRequest request, String userEmail) {
-
-        // Step 1: Find book — throws 404 if not found
-        bookRepository.findById(bookId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Book not found with id: " + bookId));
-
-        // Step 2: Find review — throws 404 if not found
-        BookReview review = bookReviewRepository.findById(reviewId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Review not found with id: " + reviewId));
-
-        // Step 3: Find logged-in user
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "User not found"));
-
-        // Step 4: Verify ownership — user can only edit their own review
-        if (!review.getUser().getId().equals(user.getId())) {
-            throw new UnauthorizedException(
-                    "You are not allowed to edit someone else's review");
-        }
-
-        // Step 5: Update fields
-        review.setRating(request.getRating());
-        if (request.getReviewText() != null) {
-            review.setReviewText(request.getReviewText());
-        }
-
-        // Step 6: Save and return
-        BookReview updated = bookReviewRepository.save(review);
-
-        return ReviewResponse.builder()
-                .id(updated.getId())
-                .bookId(updated.getBook().getId())
-                .userId(updated.getUser().getId())
-                .userName(updated.getUser().getFullName())
-                .rating(updated.getRating())
-                .reviewText(updated.getReviewText())
-                .isApproved(updated.getIsApproved())
-                .createdAt(updated.getCreatedAt())
-                .build();
-    }
-    public void deleteReview(Long bookId, Long reviewId, String userEmail) {
-
-        // Step 1: Find book — throws 404 if not found
-        bookRepository.findById(bookId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Book not found with id: " + bookId));
-
-        // Step 2: Find review — throws 404 if not found
-        BookReview review = bookReviewRepository.findById(reviewId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Review not found with id: " + reviewId));
-
-        // Step 3: Find logged-in user
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "User not found"));
-
-        // Step 4: Check ownership
-        // Admin can delete any review
-        // Student/Faculty can only delete their own review
-        boolean isAdmin = user.getRole().name().equals("SUPER_ADMIN");
-        boolean isOwner = review.getUser().getId().equals(user.getId());
-
-        if (!isAdmin && !isOwner) {
-            throw new UnauthorizedException(
-                    "You are not allowed to delete someone else's review");
-        }
-
-        // Step 5: Delete review
-        bookReviewRepository.delete(review);
-    }
-
-
-
-
-    // ── shared helpers (used by all Book service methods) ─────
-
-    protected BookResponse mapToResponse(Book book) {
-        BookResponse res = new BookResponse();
-        res.setId(book.getId());
-        res.setTitle(book.getTitle());
-        res.setAuthor(book.getAuthor());
-        res.setIsbn(book.getIsbn());
-        res.setPublisher(book.getPublisher());
-        res.setEdition(book.getEdition());
-        res.setYear(book.getYear());
-        res.setCategory(book.getCategory());
-        res.setSubject(book.getSubject());
-        res.setDescription(book.getDescription());
-        res.setCoverImageUrl(book.getCoverImageUrl());
-        res.setLanguage(book.getLanguage());
-        res.setTotalPages(book.getTotalPages());
-        res.setCreatedAt(book.getCreatedAt());
-
-        if (book.getInventories() != null) {
-            res.setTotalCopies(book.getInventories().stream()
-                    .mapToInt(BookInventory::getTotalCopies).sum());
-            res.setAvailableCopies(book.getInventories().stream()
-                    .mapToInt(BookInventory::getAvailableCopies).sum());
-        }
-
-        if (book.getReviews() != null && !book.getReviews().isEmpty()) {
-            double avg = book.getReviews().stream()
-                    .mapToInt(BookReview::getRating).average().orElse(0.0);
-            res.setAverageRating(Math.round(avg * 10.0) / 10.0);
-            res.setReviewCount(book.getReviews().size());
-        }
-
-        return res;
-    }
-    public PagedResponse<BookResponse> searchBooks(String q, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Book> books = bookRepository.searchBooks(q, pageable);
-        return buildPagedResponse(books);
-    }
-
-    public BookReviewResponse mapToReviewResponse(BookReview review) {
-
-        return BookReviewResponse.builder()
-                .id(review.getId())
-                .rating(review.getRating())
-                .reviewText(review.getReviewText())
-                .isApproved(review.getIsApproved())
-                .createdAt(review.getCreatedAt())
-                .userId(review.getUser() != null ? review.getUser().getId() : null)
-                .userName(review.getUser() != null ? review.getUser().getFullName() : null)
-                .build();
-    }
-
+    // ─────────────────────────────────────────────────────────
+    // API 10: POST /api/books
+    // ─────────────────────────────────────────────────────────
+    @Transactional
     public BookResponse createBook(BookRequest request) {
 
-        // Step 1: Check duplicate ISBN
         if (bookRepository.existsByIsbn(request.getIsbn())) {
             throw new DuplicateResourceException(
                     "Book with ISBN " + request.getIsbn() + " already exists");
         }
 
-        // Step 2: Build entity from request
         Book book = Book.builder()
                 .title(request.getTitle())
                 .author(request.getAuthor())
@@ -412,12 +218,218 @@ public class BookService {
                 .totalPages(request.getTotalPages())
                 .build();
 
-        // Step 3: Save and return
         return mapToResponse(bookRepository.save(book));
     }
-    protected PagedResponse<BookResponse> buildPagedResponse(Page<Book> page) {
+
+    // ─────────────────────────────────────────────────────────
+    // API 11: PUT /api/books/{id}
+    // ─────────────────────────────────────────────────────────
+    @Transactional
+    public BookResponse updateBook(Long id, BookRequest request) {
+
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Book not found with id: " + id));
+
+        if (!book.getIsbn().equals(request.getIsbn())
+                && bookRepository.existsByIsbn(request.getIsbn())) {
+            throw new DuplicateResourceException(
+                    "ISBN " + request.getIsbn() + " is already used by another book");
+        }
+
+        book.setTitle(request.getTitle());
+        book.setAuthor(request.getAuthor());
+        book.setIsbn(request.getIsbn());
+        book.setPublisher(request.getPublisher());
+        book.setEdition(request.getEdition());
+        book.setYear(request.getYear());
+        book.setCategory(request.getCategory());
+        book.setSubject(request.getSubject());
+        book.setDescription(request.getDescription());
+        book.setCoverImageUrl(request.getCoverImageUrl());
+        book.setLanguage(request.getLanguage() != null
+                ? request.getLanguage() : "English");
+        book.setTotalPages(request.getTotalPages());
+
+        return mapToResponse(bookRepository.save(book));
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // API 12: DELETE /api/books/{id}
+    // ─────────────────────────────────────────────────────────
+    @Transactional
+    public void deleteBook(Long id) {
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Book not found with id: " + id));
+        bookRepository.delete(book);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // API 13: POST /api/books/{id}/reviews
+    // ─────────────────────────────────────────────────────────
+    @Transactional
+    public ReviewResponse submitReview(
+            Long bookId, BookReviewRequest request, String userEmail) {
+
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Book not found with id: " + bookId));
+
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User not found"));
+
+        if (bookReviewRepository.existsByBookIdAndUserId(bookId, user.getId())) {
+            throw new DuplicateResourceException(
+                    "You have already reviewed this book");
+        }
+
+        BookReview review = BookReview.builder()
+                .book(book)
+                .user(user)
+                .rating(request.getRating())
+                .reviewText(request.getReviewText())
+                .isApproved(true)
+                .build();
+
+        BookReview saved = bookReviewRepository.save(review);
+
+        return ReviewResponse.builder()
+                .id(saved.getId())
+                .bookId(saved.getBook().getId())
+                .userId(saved.getUser().getId())
+                .userName(saved.getUser().getFullName())
+                .rating(saved.getRating())
+                .reviewText(saved.getReviewText())
+                .isApproved(saved.getIsApproved())
+                .createdAt(saved.getCreatedAt())
+                .build();
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // API 14: PUT /api/books/{id}/reviews/{rid}
+    // ─────────────────────────────────────────────────────────
+    @Transactional
+    public ReviewResponse updateReview(
+            Long bookId, Long reviewId,
+            BookReviewRequest request, String userEmail) {
+
+        bookRepository.findById(bookId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Book not found with id: " + bookId));
+
+        BookReview review = bookReviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Review not found with id: " + reviewId));
+
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User not found"));
+
+        if (!review.getUser().getId().equals(user.getId())) {
+            throw new UnauthorizedException(
+                    "You are not allowed to edit someone else's review");
+        }
+
+        review.setRating(request.getRating());
+        if (request.getReviewText() != null) {
+            review.setReviewText(request.getReviewText());
+        }
+
+        BookReview updated = bookReviewRepository.save(review);
+
+        return ReviewResponse.builder()
+                .id(updated.getId())
+                .bookId(updated.getBook().getId())
+                .userId(updated.getUser().getId())
+                .userName(updated.getUser().getFullName())
+                .rating(updated.getRating())
+                .reviewText(updated.getReviewText())
+                .isApproved(updated.getIsApproved())
+                .createdAt(updated.getCreatedAt())
+                .build();
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // API 15: DELETE /api/books/{id}/reviews/{rid}
+    // ─────────────────────────────────────────────────────────
+    @Transactional
+    public void deleteReview(Long bookId, Long reviewId, String userEmail) {
+
+        bookRepository.findById(bookId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Book not found with id: " + bookId));
+
+        BookReview review = bookReviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Review not found with id: " + reviewId));
+
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "User not found"));
+
+        boolean isAdmin = user.getRole().name().equals("SUPER_ADMIN");
+        boolean isOwner = review.getUser().getId().equals(user.getId());
+
+        if (!isAdmin && !isOwner) {
+            throw new UnauthorizedException(
+                    "You are not allowed to delete someone else's review");
+        }
+
+        bookReviewRepository.delete(review);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // SHARED HELPERS
+    // ─────────────────────────────────────────────────────────
+
+    // NOTE: This method is called INSIDE @Transactional methods
+    //       so the Hibernate session is still active here.
+    //       book.getInventories() and book.getReviews() are
+    //       safely loaded within the open session.
+    public BookResponse mapToResponse(Book book) {
+        BookResponse res = new BookResponse();
+        res.setId(book.getId());
+        res.setTitle(book.getTitle());
+        res.setAuthor(book.getAuthor());
+        res.setIsbn(book.getIsbn());
+        res.setPublisher(book.getPublisher());
+        res.setEdition(book.getEdition());
+        res.setYear(book.getYear());
+        res.setCategory(book.getCategory());
+        res.setSubject(book.getSubject());
+        res.setDescription(book.getDescription());
+        res.setCoverImageUrl(book.getCoverImageUrl());
+        res.setLanguage(book.getLanguage());
+        res.setTotalPages(book.getTotalPages());
+        res.setCreatedAt(book.getCreatedAt());
+
+        // ← These lazy collections are safely loaded
+        //   because we are inside a @Transactional method
+        if (book.getInventories() != null) {
+            res.setTotalCopies(book.getInventories().stream()
+                    .mapToInt(BookInventory::getTotalCopies).sum());
+            res.setAvailableCopies(book.getInventories().stream()
+                    .mapToInt(BookInventory::getAvailableCopies).sum());
+        }
+
+        if (book.getReviews() != null && !book.getReviews().isEmpty()) {
+            double avg = book.getReviews().stream()
+                    .mapToInt(BookReview::getRating)
+                    .average().orElse(0.0);
+            res.setAverageRating(Math.round(avg * 10.0) / 10.0);
+            res.setReviewCount(book.getReviews().size());
+        }
+
+        return res;
+    }
+
+    public PagedResponse<BookResponse> buildPagedResponse(Page<Book> page) {
         List<BookResponse> content = page.getContent()
-                .stream().map(this::mapToResponse).collect(Collectors.toList());
+                .stream().map(this::mapToResponse)
+                .collect(Collectors.toList());
+
         return PagedResponse.<BookResponse>builder()
                 .content(content)
                 .pageNumber(page.getNumber())
@@ -428,9 +440,19 @@ public class BookService {
                 .build();
     }
 
-    protected String blankToNull(String val) {
+    private String blankToNull(String val) {
         return (val == null || val.isBlank()) ? null : val;
     }
-}
 
- 
+    public BookReviewResponse mapToReviewResponse(BookReview review) {
+        return BookReviewResponse.builder()
+                .id(review.getId())
+                .rating(review.getRating())
+                .reviewText(review.getReviewText())
+                .isApproved(review.getIsApproved())
+                .createdAt(review.getCreatedAt())
+                .userId(review.getUser() != null ? review.getUser().getId() : null)
+                .userName(review.getUser() != null ? review.getUser().getFullName() : null)
+                .build();
+    }
+}

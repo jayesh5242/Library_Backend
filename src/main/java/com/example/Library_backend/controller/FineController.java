@@ -4,6 +4,7 @@ import com.example.Library_backend.dto.request.PartialPayRequest;
 import com.example.Library_backend.dto.response.ApiResponse;
 import com.example.Library_backend.dto.response.FineResponse;
 import com.example.Library_backend.dto.response.PageResponse;
+import com.example.Library_backend.dto.response.authresponse.PagedResponse;
 import com.example.Library_backend.service.CurrentUserService;
 import com.example.Library_backend.service.FineService;
 import lombok.RequiredArgsConstructor;
@@ -22,12 +23,12 @@ public class FineController {
     private final FineService service;
     private final CurrentUserService currentUserService;
     @GetMapping("/my")
-    public ResponseEntity<ApiResponse<PageResponse<FineResponse>>> my(Pageable pageable) {
+    public ResponseEntity<ApiResponse<PagedResponse<FineResponse>>> my(Pageable pageable) {
         try {
             Long userId = currentUserService.getCurrentUserId();
             return ResponseEntity.ok(service.my(pageable, userId));
         } catch (Exception e) {
-            return ResponseEntity.ok(ApiResponse.<PageResponse<FineResponse>>builder()
+            return ResponseEntity.ok(ApiResponse.<PagedResponse<FineResponse>>builder()
                     .success(false)
                     .message("Failed to fetch user fines")
                     .data(null)
@@ -50,11 +51,11 @@ public class FineController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<ApiResponse<PageResponse<FineResponse>>> all(Pageable pageable) {
+    public ResponseEntity<ApiResponse<PagedResponse<FineResponse>>> all(Pageable pageable) {
         try {
             return ResponseEntity.ok(service.all(pageable));
         } catch (Exception e) {
-            return ResponseEntity.ok(ApiResponse.<PageResponse<FineResponse>>builder()
+            return ResponseEntity.ok(ApiResponse.<PagedResponse<FineResponse>>builder()
                     .success(false)
                     .message("Failed to fetch all fines")
                     .data(null)
@@ -63,11 +64,11 @@ public class FineController {
     }
 
     @GetMapping("/pending")
-    public ResponseEntity<ApiResponse<PageResponse<FineResponse>>> pending(Pageable pageable) {
+    public ResponseEntity<ApiResponse<PagedResponse<FineResponse>>> pending(Pageable pageable) {
         try {
             return ResponseEntity.ok(service.pending(pageable));
         } catch (Exception e) {
-            return ResponseEntity.ok(ApiResponse.<PageResponse<FineResponse>>builder()
+            return ResponseEntity.ok(ApiResponse.<PagedResponse<FineResponse>>builder()
                     .success(false)
                     .message("Failed to fetch pending fines")
                     .data(null)
@@ -76,11 +77,11 @@ public class FineController {
     }
 
     @GetMapping("/branch/{id}")
-    public ResponseEntity<ApiResponse<PageResponse<FineResponse>>> branch(@PathVariable Long id, Pageable pageable) {
+    public ResponseEntity<ApiResponse<PagedResponse<FineResponse>>> branch(@PathVariable Long id, Pageable pageable) {
         try {
             return ResponseEntity.ok(service.byBranch(id, pageable));
         } catch (Exception e) {
-            return ResponseEntity.ok(ApiResponse.<PageResponse<FineResponse>>builder()
+            return ResponseEntity.ok(ApiResponse.<PagedResponse<FineResponse>>builder()
                     .success(false)
                     .message("Failed to fetch branch fines")
                     .data(null)
@@ -131,11 +132,11 @@ public class FineController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<ApiResponse<PageResponse<FineResponse>>> user(@PathVariable Long userId, Pageable pageable) {
+    public ResponseEntity<ApiResponse<PagedResponse<FineResponse>>> user(@PathVariable Long userId, Pageable pageable) {
         try {
             return ResponseEntity.ok(service.byUser(userId, pageable));
         } catch (Exception e) {
-            return ResponseEntity.ok(ApiResponse.<PageResponse<FineResponse>>builder()
+            return ResponseEntity.ok(ApiResponse.<PagedResponse<FineResponse>>builder()
                     .success(false)
                     .message("Failed to fetch user fines")
                     .data(null)

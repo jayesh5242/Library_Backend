@@ -2,8 +2,8 @@ package com.example.Library_backend.service;
 
 import com.example.Library_backend.dto.request.CreateTransferRequest;
 import com.example.Library_backend.dto.response.ApiResponse;
-import com.example.Library_backend.dto.response.PageResponse;
 import com.example.Library_backend.dto.response.TransferResponse;
+import com.example.Library_backend.dto.response.authresponse.PagedResponse;
 import com.example.Library_backend.entity.Book;
 import com.example.Library_backend.entity.Branch;
 import com.example.Library_backend.entity.InterBranchTransfer;
@@ -13,8 +13,8 @@ import com.example.Library_backend.repository.BookRepository;
 import com.example.Library_backend.repository.BranchRepository;
 import com.example.Library_backend.repository.InterBranchTransferRepository;
 import com.example.Library_backend.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class InterBranchTransferService {
 
     private final InterBranchTransferRepository repo;
@@ -73,13 +74,16 @@ public class InterBranchTransferService {
         }
     }
 
-    public ApiResponse<PageResponse<TransferResponse>> my(Pageable pageable, Long userId) {
+    public ApiResponse<PagedResponse<TransferResponse>> my(Pageable pageable, Long userId) {
         try {
 
-            Page<TransferResponse> data = repo.findByRequestedById(userId, pageable)
-                    .map(this::map);
+            PagedResponse<TransferResponse> data = helperService.toPagedResponse(
+                    repo.findByRequestedById(userId, pageable)
+                            .map(this::map),
+                    "Fetched transfers"
+            );
 
-            return new ApiResponse<>(true, "Fetched transfers", helperService.toPageResponse(data));
+            return new ApiResponse<>(true, "Fetched transfers", data);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -87,12 +91,16 @@ public class InterBranchTransferService {
         }
     }
 
-    public ApiResponse<PageResponse<TransferResponse>> outgoing(Long branchId, Pageable pageable) {
+    public ApiResponse<PagedResponse<TransferResponse>> outgoing(Long branchId, Pageable pageable) {
         try {
-            Page<TransferResponse> data = repo.findByFromBranchId(branchId, pageable)
-                    .map(this::map);
 
-            return new ApiResponse<>(true, "Outgoing transfers fetched",  helperService.toPageResponse(data));
+            PagedResponse<TransferResponse> data = helperService.toPagedResponse(
+                    repo.findByFromBranchId(branchId, pageable)
+                            .map(this::map),
+                    "Outgoing transfers fetched"
+            );
+
+            return new ApiResponse<>(true, "Outgoing transfers fetched", data);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -100,12 +108,16 @@ public class InterBranchTransferService {
         }
     }
 
-    public ApiResponse<PageResponse<TransferResponse>> incoming(Long branchId, Pageable pageable) {
+    public ApiResponse<PagedResponse<TransferResponse>> incoming(Long branchId, Pageable pageable) {
         try {
-            Page<TransferResponse> data = repo.findByToBranchId(branchId, pageable)
-                    .map(this::map);
 
-            return new ApiResponse<>(true, "Incoming transfers fetched",  helperService.toPageResponse(data));
+            PagedResponse<TransferResponse> data = helperService.toPagedResponse(
+                    repo.findByToBranchId(branchId, pageable)
+                            .map(this::map),
+                    "Incoming transfers fetched"
+            );
+
+            return new ApiResponse<>(true, "Incoming transfers fetched", data);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -204,12 +216,16 @@ public class InterBranchTransferService {
         }
     }
 
-    public ApiResponse<PageResponse<TransferResponse>> all(Pageable pageable) {
+    public ApiResponse<PagedResponse<TransferResponse>> all(Pageable pageable) {
         try {
-            Page<TransferResponse> data = repo.findAll(pageable)
-                    .map(this::map);
 
-            return new ApiResponse<>(true, "All transfers",  helperService.toPageResponse(data));
+            PagedResponse<TransferResponse> data = helperService.toPagedResponse(
+                    repo.findAll(pageable)
+                            .map(this::map),
+                    "All transfers"
+            );
+
+            return new ApiResponse<>(true, "All transfers", data);
 
         } catch (Exception e) {
             e.printStackTrace();

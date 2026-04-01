@@ -27,7 +27,7 @@ public interface BorrowTransactionRepository extends JpaRepository<BorrowTransac
     """,
             countQuery = """
         SELECT COUNT(*)
-        FROM borrow_transaction b
+        FROM borrow_transactions b
         WHERE b.due_date < :now
           AND b.status = 'BORROWED'
     """,
