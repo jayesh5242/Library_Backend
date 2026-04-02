@@ -132,4 +132,22 @@ public class EmailService {
 
         sendEmail(toEmail, subject, body);
     }
+
+    public void sendDueDateReminderEmail(
+            String to, String name,
+            String bookTitle, String dueDate) {
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(to);
+        message.setSubject("⏰ Library Reminder: Book Due in 3 Days!");
+        message.setText(
+                "Dear " + name + ",\n\n" +
+                        "This is a friendly reminder that the following book is due in 3 days:\n\n" +
+                        "Book: " + bookTitle + "\n" +
+                        "Due Date: " + dueDate + "\n\n" +
+                        "Please return the book on time to avoid a fine of Rs. 2 per day.\n\n" +
+                        "Thank you,\nCollege Library Network"
+        );
+        mailSender.send(message);
+    }
 }

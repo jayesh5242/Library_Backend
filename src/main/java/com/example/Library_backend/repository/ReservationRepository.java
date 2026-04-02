@@ -9,6 +9,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.util.List;
+
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 
@@ -40,4 +43,10 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
 
     @Query(value = "SELECT COUNT(*) FROM reservations WHERE status = :status", nativeQuery = true)
     long countByStatus(@Param("status") String status);
+
+    // ReservationExpiryScheduler
+    @Query(value = "SELECT * FROM reservation WHERE status = :status AND ready_date < :date", nativeQuery = true)
+    List<Reservation> findByStatusAndReadyDateBefore(
+            @Param("status") String status,
+            @Param("date") LocalDate date);
 }

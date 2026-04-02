@@ -92,6 +92,7 @@ public interface FineRepository
     Double sumCollectedFinesByBranchId(@Param("branchId") Long branchId);
 
     // ✅ 1. Find fine by transaction
+    // FineCalculationScheduler
     @Query(value = "SELECT * FROM fines WHERE transaction_id = :transactionId", nativeQuery = true)
     Optional<Fine> findByTransactionId(@Param("transactionId") Long transactionId);
 
@@ -160,5 +161,6 @@ public interface FineRepository
     Page<Fine> findByUserId(Long userId, Pageable pageable);
 
     List<Fine> findByUserIdAndStatus(Long userId, FineStatus status);
+    // FineCalculationScheduler
 
 }

@@ -65,6 +65,7 @@ public interface BorrowTransactionRepository extends JpaRepository<BorrowTransac
 
 
     // ✅ 3. Get Transactions by Status
+    // 2. FineCalculationScheduler
     @Query(value = "SELECT * FROM borrow_transactions WHERE status = :status", nativeQuery = true)
     List<BorrowTransaction> findByStatus(@Param("status") String status);
 
@@ -158,6 +159,18 @@ public interface BorrowTransactionRepository extends JpaRepository<BorrowTransac
             nativeQuery = true)
     List<BorrowTransaction> findOverdueByBranchId(
             @Param("branchId") Long branchId);
+
+    // 1. OverdueCheckScheduler
+    @Query(value = "SELECT * FROM borrow_transaction WHERE status = :status AND due_date < :date", nativeQuery = true)
+    List<BorrowTransaction> findByStatusAndDueDateBefore(
+            @Param("status") String status,
+            @Param("date") LocalDate date);
+
+    // 3. DueDateReminderScheduler
+    @Query(value = "SELECT * FROM borrow_transaction WHERE status = :status AND due_date = :date", nativeQuery = true)
+    List<BorrowTransaction> findByStatusAndDueDate(
+            @Param("status") String status,
+            @Param("date") LocalDate date);
 }
 
 
