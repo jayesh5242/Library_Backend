@@ -13,6 +13,8 @@ public class BorrowResponse {
     private Long id;
     private Long bookId;
     private String bookTitle;
+    private String bookAuthor;
+    private String coverImageUrl;
     private Long userId;
     private String userName;
     private LocalDate issueDate;

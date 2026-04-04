@@ -31,6 +31,24 @@ public class BookController {
     private final BookInventoryRepository bookInventoryRepository;
 
 
+    @GetMapping("/featured")
+    @Operation(summary = "Get featured books for homepage (ordered)")
+    public ResponseEntity<ApiResponse<List<BookResponse>>> getFeaturedBooks() {
+        return ResponseEntity.ok(
+                ApiResponse.success("Featured books fetched", bookService.getFeaturedBooks()));
+    }
+
+    @PatchMapping("/{id}/feature")
+    @Operation(summary = "Set/unset a book as featured with order", security = @SecurityRequirement(name = "bearerAuth"))
+    @PreAuthorize("hasAnyRole('LIBRARIAN', 'SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<BookResponse>> setFeatured(
+            @PathVariable Long id,
+            @RequestParam boolean featured,
+            @RequestParam(defaultValue = "0") int order) {
+        return ResponseEntity.ok(
+                ApiResponse.success("Book feature status updated", bookService.setFeatured(id, featured, order)));
+    }
+
     @GetMapping
     @Operation(summary = "Get all books with pagination & optional filters")
     public ResponseEntity<ApiResponse<PagedResponse<BookResponse>>> getAllBooks(
@@ -172,7 +190,7 @@ public class BookController {
             summary = "Delete a book from the system — Super Admin only",
             security = @SecurityRequirement(name = "bearerAuth")
     )
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('LIBRARIAN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteBook(
             @PathVariable Long id) {
 

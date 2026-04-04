@@ -5,10 +5,16 @@ import com.example.Library_backend.dto.response.ApiResponse;
 import com.example.Library_backend.dto.response.ReservationResponse;
 import com.example.Library_backend.dto.response.PageResponse;
 import com.example.Library_backend.entity.Book;
+import com.example.Library_backend.entity.BookInventory;
+import com.example.Library_backend.entity.BorrowTransaction;
+import com.example.Library_backend.entity.Branch;
 import com.example.Library_backend.entity.Reservation;
 import com.example.Library_backend.entity.User;
 import com.example.Library_backend.enums.ReservationStatus;
+import com.example.Library_backend.enums.TransactionStatus;
+import com.example.Library_backend.repository.BookInventoryRepository;
 import com.example.Library_backend.repository.BookRepository;
+import com.example.Library_backend.repository.BorrowTransactionRepository;
 import com.example.Library_backend.repository.ReservationRepository;
 import com.example.Library_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +33,8 @@ public class ReservationService {
     private final ReservationRepository reservationRepo;
     private final BookRepository bookRepo;
     private final UserRepository userRepo;
+    private final BookInventoryRepository bookInventoryRepo;
+    private final BorrowTransactionRepository borrowRepo;
     private final HelperService helperService;
 
     public ApiResponse<ReservationResponse> createReservation(CreateReservationRequest request) {
@@ -36,9 +45,17 @@ public class ReservationService {
             User user = userRepo.findById(request.getUserId())
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
+            // Get branch from book inventory
+            List<BookInventory> inventories = bookInventoryRepo.findByBookId(book.getId());
+            if (inventories.isEmpty()) {
+                return new ApiResponse<>(false, "No inventory found for this book", null);
+            }
+            Branch branch = inventories.get(0).getBranch();
+
             Reservation reservation = Reservation.builder()
                     .book(book)
                     .user(user)
+                    .branch(branch)
                     .status(ReservationStatus.PENDING)
                     .reservedAt(LocalDateTime.now())
                     .expiryDate(LocalDate.now().plusDays(3))
@@ -50,22 +67,19 @@ public class ReservationService {
 
         } catch (Exception e) {
             e.printStackTrace();
-            return new ApiResponse<>(false, "Failed to create reservation", null);
+            return new ApiResponse<>(false, "Failed to create reservation: " + e.getMessage(), null);
         }
     }
 
     public ApiResponse<PageResponse<ReservationResponse>> getMyReservations(Pageable pageable, Long userId) {
         try {
-
             Page<ReservationResponse> data = reservationRepo
                     .findByUserId(userId, pageable)
                     .map(this::mapToResponse);
-
             return new ApiResponse<>(true, "Fetched reservations successfully", helperService.toPageResponse(data));
-
         } catch (Exception e) {
             e.printStackTrace();
-            return new ApiResponse<>(false, "Failed to fetch reservations", null);
+            return new ApiResponse<>(false, "Failed to fetch reservations: " + e.getMessage(), null);
         }
     }
 
@@ -87,14 +101,12 @@ public class ReservationService {
 
     public ApiResponse<PageResponse<ReservationResponse>> getAllReservations(Pageable pageable) {
         try {
-            Page<ReservationResponse> data = reservationRepo.findAll(pageable)
+            Page<ReservationResponse> data = reservationRepo.findAllWithDetails(pageable)
                     .map(this::mapToResponse);
-
             return new ApiResponse<>(true, "Fetched all reservations", helperService.toPageResponse(data));
-
         } catch (Exception e) {
             e.printStackTrace();
-            return new ApiResponse<>(false, "Failed to fetch reservations", null);
+            return new ApiResponse<>(false, "Failed to fetch reservations: " + e.getMessage(), null);
         }
     }
 
@@ -152,7 +164,34 @@ public class ReservationService {
             r.setStatus(ReservationStatus.COLLECTED);
             reservationRepo.save(r);
 
-            return new ApiResponse<>(true, "Marked as collected", mapToResponse(r));
+            // Auto-create BorrowTransaction when book is collected
+            Book book = r.getBook();
+            List<BookInventory> inventories = bookInventoryRepo.findByBookId(book.getId());
+            BookInventory inventory = inventories.stream()
+                    .filter(inv -> inv.getAvailableCopies() > 0)
+                    .findFirst().orElse(inventories.isEmpty() ? null : inventories.get(0));
+
+            BorrowTransaction txn = BorrowTransaction.builder()
+                    .book(book)
+                    .user(r.getUser())
+                    .branch(r.getBranch())
+                    .issueDate(java.time.LocalDate.now())
+                    .dueDate(java.time.LocalDate.now().plusDays(14))
+                    .status(TransactionStatus.BORROWED)
+                    .build();
+            borrowRepo.save(txn);
+
+            // Decrement inventory
+            if (inventory != null && inventory.getAvailableCopies() > 0) {
+                inventory.setAvailableCopies(inventory.getAvailableCopies() - 1);
+                bookInventoryRepo.save(inventory);
+                if (inventory.getAvailableCopies() == 0) {
+                    book.setAvailable(false);
+                    bookRepo.save(book);
+                }
+            }
+
+            return new ApiResponse<>(true, "Marked as collected and book issued", mapToResponse(r));
 
         } catch (Exception e) {
             e.printStackTrace();

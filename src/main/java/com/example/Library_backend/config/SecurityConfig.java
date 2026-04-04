@@ -43,6 +43,13 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         ).permitAll()
+                        .requestMatchers(
+                                org.springframework.http.HttpMethod.GET,
+                                "/api/books",
+                                "/api/books/**",
+                                "/api/branches",
+                                "/api/branches/**"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())

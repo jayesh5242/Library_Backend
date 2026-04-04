@@ -26,7 +26,7 @@ public class UserController {
     // ─── API 1: GET ALL USERS ─────────────────────────────
     // GET /api/users?page=0&size=10&sortBy=createdAt&role=STUDENT
     @GetMapping
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('LIBRARIAN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -45,7 +45,7 @@ public class UserController {
     // ─── API 2: GET USER BY ID ────────────────────────────
     // GET /api/users/{id}
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('LIBRARIAN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse> getUserById(
             @PathVariable Long id) {
 

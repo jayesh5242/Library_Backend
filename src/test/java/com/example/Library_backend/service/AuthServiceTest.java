@@ -81,11 +81,10 @@ class AuthServiceTest {
                 .sendVerificationEmail(anyString(), anyString());
 
         // ACT: Call the method being tested
-        String result = authService.register(registerRequest);
+        var result = authService.register(registerRequest);
 
         // ASSERT: Check the result
         assertNotNull(result);
-        assertTrue(result.contains("successful"));
 
         // Verify interactions
         verify(userRepository, times(1))

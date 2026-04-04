@@ -43,7 +43,7 @@ public class AuthService {
     private final CurrentUserService currentUserService;
 
     // ─── API 1: REGISTER ─────────────────────────────────────
-    public String register(RegisterRequest request) {
+    public AuthResponse register(RegisterRequest request) {
 
         // 1. Check if email already used
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -58,12 +58,12 @@ public class AuthService {
         // 3. Encrypt password before saving
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        user.setPhone(request.getPhone());
-        user.setDepartment(request.getDepartment());
-        user.setEnrollmentNo(request.getEnrollmentNo());
-        user.setEmployeeId(request.getEmployeeId());
+        user.setPhone(request.getPhone() != null && !request.getPhone().isBlank() ? request.getPhone().trim() : null);
+        user.setDepartment(request.getDepartment() != null && !request.getDepartment().isBlank() ? request.getDepartment().trim() : null);
+        user.setEnrollmentNo(request.getEnrollmentNo() != null && !request.getEnrollmentNo().isBlank() ? request.getEnrollmentNo().trim() : null);
+        user.setEmployeeId(request.getEmployeeId() != null && !request.getEmployeeId().isBlank() ? request.getEmployeeId().trim() : null);
         user.setIsActive(true);
-        user.setIsEmailVerified(false);
+        user.setIsEmailVerified(true); // auto-verified
 
         // 4. Set role (default STUDENT)
         try {
@@ -75,17 +75,28 @@ public class AuthService {
                     "Invalid role! Use: STUDENT, FACULTY, LIBRARIAN, SUPER_ADMIN");
         }
 
-        // 5. Generate email verification token
-        String verifyToken = UUID.randomUUID().toString();
-        user.setEmailVerifyToken(verifyToken);
-
-        // 6. Save user to database
+        // 5. Save user
         userRepository.save(user);
 
-        // 7. Send verification email
-        emailService.sendVerificationEmail(user.getEmail(), verifyToken);
+        // 6. Send welcome email
+        emailService.sendWelcomeEmail(user.getEmail(), user.getFullName(), user.getRole().name());
 
-        return "Registration successful! Please check your email to verify your account.";
+        // 8. Generate and return tokens so frontend can auto-login
+        String accessToken = jwtUtils.generateToken(user.getEmail());
+        String refreshToken = jwtUtils.generateRefreshToken(user.getEmail());
+
+        AuthResponse response = new AuthResponse();
+        response.setAccessToken(accessToken);
+        response.setRefreshToken(refreshToken);
+        response.setTokenType("Bearer");
+        response.setEmail(user.getEmail());
+        response.setFullName(user.getFullName());
+        response.setRole(user.getRole().name());
+        response.setUserId(user.getId());
+        response.setDepartment(user.getDepartment());
+        response.setIsEmailVerified(user.getIsEmailVerified());
+
+        return response;
     }
 
     // ─── API 2: LOGIN ─────────────────────────────────────────

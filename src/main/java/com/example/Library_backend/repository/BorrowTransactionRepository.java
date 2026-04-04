@@ -15,43 +15,29 @@ import java.util.List;
 
 @Repository
 public interface BorrowTransactionRepository extends JpaRepository<BorrowTransaction,Long> {
-    Page<BorrowTransaction> findByUserId(Long userId, Pageable pageable);
+    @Query("SELECT b FROM BorrowTransaction b JOIN FETCH b.book JOIN FETCH b.user WHERE b.user.id = :userId")
+    Page<BorrowTransaction> findByUserId(@Param("userId") Long userId, Pageable pageable);
 
-    Page<BorrowTransaction> findByUserIdAndStatus(Long userId, TransactionStatus status, Pageable pageable);
+    @Query("SELECT b FROM BorrowTransaction b JOIN FETCH b.book JOIN FETCH b.user WHERE b.user.id = :userId AND b.status = :status")
+    Page<BorrowTransaction> findByUserIdAndStatus(@Param("userId") Long userId, @Param("status") TransactionStatus status, Pageable pageable);
 
-    @Query(value = """
-        SELECT *
-        FROM borrow_transactions b
-        WHERE b.due_date < :now
-          AND b.status = 'BORROWED'
-    """,
-            countQuery = """
-        SELECT COUNT(*)
-        FROM borrow_transaction b
-        WHERE b.due_date < :now
-          AND b.status = 'BORROWED'
-    """,
-            nativeQuery = true)
-    Page<BorrowTransaction> findOverdue(LocalDate now, Pageable pageable);
+    @Query("SELECT b FROM BorrowTransaction b JOIN FETCH b.book JOIN FETCH b.user WHERE b.user.id = :userId AND b.status IN :statuses")
+    Page<BorrowTransaction> findByUserIdAndStatusIn(@Param("userId") Long userId, @Param("statuses") java.util.List<TransactionStatus> statuses, Pageable pageable);
 
-    @Query(value = """
-        SELECT b.*
-        FROM borrow_transactions b
-        JOIN books bk ON b.book_id = bk.id
-        WHERE bk.branch_id = :branchId
-          AND b.due_date < :now
-          AND b.status = 'BORROWED'
-    """,
-            countQuery = """
-        SELECT COUNT(*)
-        FROM borrow_transaction b
-        JOIN books bk ON b.book_id = bk.id
-        WHERE bk.branch_id = :branchId
-          AND b.due_date < :now
-          AND b.status = 'BORROWED'
-    """,
-            nativeQuery = true)
-    Page<BorrowTransaction> findOverdueByBranch(Long branchId, LocalDate now, Pageable pageable);
+    @Query("SELECT b FROM BorrowTransaction b JOIN FETCH b.book JOIN FETCH b.user WHERE b.user.id = :userId AND b.status <> :status")
+    Page<BorrowTransaction> findByUserIdAndStatusNot(@Param("userId") Long userId, @Param("status") TransactionStatus status, Pageable pageable);
+
+    @Query("SELECT b FROM BorrowTransaction b JOIN FETCH b.book JOIN FETCH b.user")
+    Page<BorrowTransaction> findAllWithDetails(Pageable pageable);
+
+    @Query("SELECT b FROM BorrowTransaction b JOIN FETCH b.book JOIN FETCH b.user WHERE b.id = :id")
+    java.util.Optional<BorrowTransaction> findByIdWithDetails(@Param("id") Long id);
+
+    @Query("SELECT b FROM BorrowTransaction b JOIN FETCH b.book JOIN FETCH b.user WHERE b.dueDate < :now AND b.status = 'BORROWED'")
+    Page<BorrowTransaction> findOverdue(@Param("now") LocalDate now, Pageable pageable);
+
+    @Query("SELECT b FROM BorrowTransaction b JOIN FETCH b.book JOIN FETCH b.user WHERE b.branch.id = :branchId AND b.dueDate < :now AND b.status = 'BORROWED'")
+    Page<BorrowTransaction> findOverdueByBranch(@Param("branchId") Long branchId, @Param("now") LocalDate now, Pageable pageable);
 
     // ✅ 1. Count by Status
     @Query(value = "SELECT COUNT(*) FROM borrow_transactions WHERE status = :status", nativeQuery = true)
@@ -65,8 +51,8 @@ public interface BorrowTransactionRepository extends JpaRepository<BorrowTransac
 
 
     // ✅ 3. Get Transactions by Status
-    @Query(value = "SELECT * FROM borrow_transactions WHERE status = :status", nativeQuery = true)
-    List<BorrowTransaction> findByStatus(@Param("status") String status);
+    @Query("SELECT b FROM BorrowTransaction b JOIN FETCH b.book JOIN FETCH b.user WHERE b.status = :status")
+    List<BorrowTransaction> findByStatus(@Param("status") TransactionStatus status);
 
 
     // ✅ 4. Monthly Borrowing Count
@@ -124,12 +110,7 @@ public interface BorrowTransactionRepository extends JpaRepository<BorrowTransac
 
 
     // ✅ 9. Overdue Transactions
-    @Query(value = """
-        SELECT *
-        FROM borrow_transactions
-        WHERE status = 'OVERDUE'
-           OR (status = 'BORROWED' AND due_date < :today)
-        """, nativeQuery = true)
+    @Query("SELECT b FROM BorrowTransaction b JOIN FETCH b.book JOIN FETCH b.user WHERE b.status = 'OVERDUE' OR (b.status = 'BORROWED' AND b.dueDate < :today)")
     List<BorrowTransaction> getOverdueTransactions(@Param("today") LocalDate today);
 
 
@@ -151,13 +132,8 @@ public interface BorrowTransactionRepository extends JpaRepository<BorrowTransac
     Integer countAllBorrowsByBranchId(@Param("branchId") Long branchId);
 
     // All overdue transactions for a branch
-    @Query(value = "SELECT * FROM borrow_transactions bt " +
-            "WHERE bt.branch_id = :branchId " +
-            "AND bt.status = 'OVERDUE' " +
-            "ORDER BY bt.due_date ASC",
-            nativeQuery = true)
-    List<BorrowTransaction> findOverdueByBranchId(
-            @Param("branchId") Long branchId);
+    @Query("SELECT b FROM BorrowTransaction b JOIN FETCH b.book JOIN FETCH b.user WHERE b.branch.id = :branchId AND b.status = 'OVERDUE' ORDER BY b.dueDate ASC")
+    List<BorrowTransaction> findOverdueByBranchId(@Param("branchId") Long branchId);
 }
 
 

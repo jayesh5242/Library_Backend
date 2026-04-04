@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -16,9 +17,8 @@ public class EmailService {
     private String frontendUrl;
 
     // ─── Generic send email ──────────────────────────────
-    public void sendEmail(String toEmail,
-                          String subject,
-                          String body) {
+    @Async
+    public void sendEmail(String toEmail, String subject, String body) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(toEmail);
@@ -37,8 +37,7 @@ public class EmailService {
     public void sendVerificationEmail(String toEmail,
                                       String token) {
         String subject = "Verify Your Email - College Library";
-        String link = "http://localhost:9090"
-                + "/api/auth/verify-email/" + token;
+        String link = frontendUrl + "/verify-email?token=" + token;
         String body =
                 "Hello!\n\n"
                         + "Thank you for registering at College Library.\n\n"
@@ -126,7 +125,7 @@ public class EmailService {
                         + "Your email has been verified successfully.\n\n"
                         + "Your Role: " + role + "\n\n"
                         + roleMessage + "\n\n"
-                        + "Login here: http://localhost:3000/login\n\n"
+                        + "Login here: " + frontendUrl + "/login\n\n"
                         + "Happy Reading! 📖\n\n"
                         + "College Library Team";
 

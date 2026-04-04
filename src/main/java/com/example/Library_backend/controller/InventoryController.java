@@ -126,7 +126,7 @@ public class InventoryController {
     // ─────────────────────────────────────────────────────────
     @DeleteMapping("/{id}")
     @Operation(summary = "Remove book from branch inventory — Admin only")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('LIBRARIAN', 'SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> removeInventory(
             @PathVariable Long id) {
 

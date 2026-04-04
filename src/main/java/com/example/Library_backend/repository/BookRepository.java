@@ -23,7 +23,8 @@ public interface BookRepository extends JpaRepository<Book, Long> {
             "(:title    IS NULL OR LOWER(b.title)    LIKE LOWER(CONCAT('%', :title,    '%'))) AND " +
             "(:author   IS NULL OR LOWER(b.author)   LIKE LOWER(CONCAT('%', :author,   '%'))) AND " +
             "(:category IS NULL OR LOWER(b.category) LIKE LOWER(CONCAT('%', :category, '%'))) AND " +
-            "(:subject  IS NULL OR LOWER(b.subject)  LIKE LOWER(CONCAT('%', :subject,  '%')))",
+            "(:subject  IS NULL OR LOWER(b.subject)  LIKE LOWER(CONCAT('%', :subject,  '%'))) " +
+            "ORDER BY b.created_at DESC",
             countQuery = "SELECT COUNT(*) FROM books b WHERE " +
                     "(:title    IS NULL OR LOWER(b.title)    LIKE LOWER(CONCAT('%', :title,    '%'))) AND " +
                     "(:author   IS NULL OR LOWER(b.author)   LIKE LOWER(CONCAT('%', :author,   '%'))) AND " +
@@ -56,43 +57,17 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     Page<Book> searchBooks(@Param("q") String q, Pageable pageable);
 
 
-    // ─────────────────────────────────────────────────────────
-    // API 4: GET /api/books/popular
-    // Top 10 most borrowed books — all time
-    // ─────────────────────────────────────────────────────────
-    @Query(value = "SELECT b.* FROM books b " +
-            "JOIN borrow_transactions bt ON b.id = bt.book_id " +
-            "GROUP BY b.id " +
-            "ORDER BY COUNT(bt.id) DESC " +
-            "LIMIT 10",
-            nativeQuery = true)
-    List<Book> findTopBorrowedBooks();
+    @Query("SELECT b FROM Book b WHERE b.isFeatured = true ORDER BY b.featuredOrder ASC")
+    List<Book> findFeaturedBooks();
 
+    @Query("SELECT b FROM Book b LEFT JOIN b.borrowTransactions bt GROUP BY b ORDER BY COUNT(bt) DESC, b.createdAt DESC")
+    List<Book> findTopBorrowedBooks(Pageable pageable);
 
-    // ─────────────────────────────────────────────────────────
-    // API 5: GET /api/books/trending
-    // Top 10 books borrowed in last 6 months
-    // ─────────────────────────────────────────────────────────
-    @Query(value = "SELECT b.* FROM books b " +
-            "JOIN borrow_transactions bt ON b.id = bt.book_id " +
-            "WHERE bt.issue_date >= CURRENT_DATE - INTERVAL '6 months' " +
-            "GROUP BY b.id " +
-            "ORDER BY COUNT(bt.id) DESC " +
-            "LIMIT 10",
-            nativeQuery = true)
-    List<Book> findTrendingBooks();
+    @Query("SELECT b FROM Book b LEFT JOIN b.borrowTransactions bt ON bt.issueDate >= :sixMonthsAgo GROUP BY b ORDER BY COUNT(bt) DESC, b.createdAt DESC")
+    List<Book> findTrendingBooks(@Param("sixMonthsAgo") java.time.LocalDate sixMonthsAgo, Pageable pageable);
 
-
-    // ─────────────────────────────────────────────────────────
-    // API 6: GET /api/books/new-arrivals
-    // Books added in last 30 days, newest first
-    // ─────────────────────────────────────────────────────────
-    @Query(value = "SELECT * FROM books b " +
-            "WHERE b.created_at >= CURRENT_DATE - INTERVAL '6 months' " +
-            "ORDER BY b.created_at DESC " +
-            "LIMIT 10",
-            nativeQuery = true)
-    List<Book> findNewArrivals();
+    @Query("SELECT b FROM Book b ORDER BY b.createdAt DESC")
+    List<Book> findNewArrivals(Pageable pageable);
 
 
     // ─────────────────────────────────────────────────────────

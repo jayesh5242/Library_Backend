@@ -59,6 +59,12 @@ public class Book {
     @Column(name = "available")
     private Boolean available = true;
 
+    @Column(name = "is_featured")
+    private Boolean isFeatured = false;
+
+    @Column(name = "featured_order")
+    private Integer featuredOrder = 0;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

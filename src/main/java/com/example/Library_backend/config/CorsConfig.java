@@ -12,38 +12,30 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    @Value("${app.frontend-url:http://localhost:3000}")
-    private String frontendUrl;
+        @Value("${app.frontend-url}")
+        private String frontendUrl;
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
 
-        CorsConfiguration config = new CorsConfiguration();
+                CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of(
-                // Local development
-                "http://localhost:3000",
-                "http://localhost:9090",
-                "http://localhost:8080",
-                // Railway production — HTTPS required
-                "https://librarybackend-production-67b6.up.railway.app",
-                // Dynamic frontend URL from env variable
-                frontendUrl
-        ));
+                config.setAllowedOrigins(List.of(
+                                // "http://localhost:3000",
+                                // "http://localhost:5173",
+                                frontendUrl));
 
-        config.setAllowedMethods(List.of(
-                "GET", "POST", "PUT",
-                "DELETE", "PATCH", "OPTIONS"
-        ));
+                config.setAllowedMethods(List.of(
+                                "GET", "POST", "PUT",
+                                "DELETE", "PATCH", "OPTIONS"));
 
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);
-        config.setMaxAge(3600L);
+                config.setAllowedHeaders(List.of("*"));
+                config.setAllowCredentials(true);
+                config.setMaxAge(3600L);
 
-        UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", config);
 
-        return source;
-    }
+                return source;
+        }
 }

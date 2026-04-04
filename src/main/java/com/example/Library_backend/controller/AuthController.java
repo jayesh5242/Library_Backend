@@ -22,8 +22,8 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<ApiResponse> register(
             @Valid @RequestBody RegisterRequest request) {
-        String message = authService.register(request);
-        return ResponseEntity.ok(ApiResponse.success(message, null));
+        AuthResponse authResponse = authService.register(request);
+        return ResponseEntity.ok(ApiResponse.success("Registration successful! Please verify your email.", authResponse));
     }
 
     // ─── API 2: LOGIN ─────────────────────────────────────────

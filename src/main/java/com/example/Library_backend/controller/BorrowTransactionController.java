@@ -42,10 +42,17 @@ public class BorrowTransactionController {
             return ResponseEntity.ok(borrowService.returnBook(request));
         } catch (Exception e) {
             return ResponseEntity.ok(ApiResponse.<BorrowResponse>builder()
-                    .success(false)
-                    .message("Failed to return book")
-                    .data(null)
-                    .build());
+                    .success(false).message("Failed to return book").data(null).build());
+        }
+    }
+
+    @PutMapping("/{id}/accept-return")
+    public ResponseEntity<ApiResponse<BorrowResponse>> acceptReturn(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(borrowService.acceptReturn(id));
+        } catch (Exception e) {
+            return ResponseEntity.ok(ApiResponse.<BorrowResponse>builder()
+                    .success(false).message("Failed to accept return").data(null).build());
         }
     }
 

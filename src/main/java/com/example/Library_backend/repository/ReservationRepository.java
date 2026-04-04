@@ -12,9 +12,14 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
 
-    Page<Reservation> findByUserId(Long userId, Pageable pageable);
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.book JOIN FETCH r.user WHERE r.user.id = :userId")
+    Page<Reservation> findByUserId(@Param("userId") Long userId, Pageable pageable);
 
-    Page<Reservation> findAllByStatus(ReservationStatus status, Pageable pageable);
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.book JOIN FETCH r.user")
+    Page<Reservation> findAllWithDetails(Pageable pageable);
+
+    @Query("SELECT r FROM Reservation r JOIN FETCH r.book JOIN FETCH r.user WHERE r.book.id = :bookId")
+    Page<Reservation> findByBookId(@Param("bookId") Long bookId, Pageable pageable);
 
     @Query(
             value = """
@@ -34,9 +39,6 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             nativeQuery = true
     )
     Page<Reservation> findPendingByBranch(@Param("branchId") Long branchId, Pageable pageable);
-
-    Page<Reservation> findByBookId(Long bookId, Pageable pageable);
-
 
     @Query(value = "SELECT COUNT(*) FROM reservations WHERE status = :status", nativeQuery = true)
     long countByStatus(@Param("status") String status);

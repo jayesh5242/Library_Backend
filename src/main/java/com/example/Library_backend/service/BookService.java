@@ -19,11 +19,13 @@ import com.example.Library_backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
- 
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.stream.Collectors;
  
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class BookService {
  
@@ -45,13 +47,18 @@ public class BookService {
         boolean hasFilter = title != null || author != null
                 || category != null || subject != null;
 
+        // For filterBooks (native query), sorting is handled inside the query itself
+        Pageable filterPageable = hasFilter
+                ? PageRequest.of(page, size)
+                : pageable;
+
         Page<Book> books = hasFilter
                 ? bookRepository.filterBooks(
                 blankToNull(title),
                 blankToNull(author),
                 blankToNull(category),
                 blankToNull(subject),
-                pageable)
+                filterPageable)
                 : bookRepository.findAll(pageable);
 
         return buildPagedResponse(books);
@@ -65,21 +72,35 @@ public class BookService {
     }
 
     public List<BookResponse> getPopularBooks() {
-        return bookRepository.findTopBorrowedBooks()
+        return bookRepository.findTopBorrowedBooks(PageRequest.of(0, 10))
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
     public List<BookResponse> getTrendingBooks() {
-        return bookRepository.findTrendingBooks()
+        java.time.LocalDate sixMonthsAgo = java.time.LocalDate.now().minusMonths(6);
+        return bookRepository.findTrendingBooks(sixMonthsAgo, PageRequest.of(0, 10))
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
 
+    public List<BookResponse> getFeaturedBooks() {
+        return bookRepository.findFeaturedBooks()
+                .stream().map(this::mapToResponse).collect(Collectors.toList());
+    }
+
+    public BookResponse setFeatured(Long id, boolean featured, int order) {
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Book not found with id: " + id));
+        book.setIsFeatured(featured);
+        book.setFeaturedOrder(order);
+        return mapToResponse(bookRepository.save(book));
+    }
+
     public List<BookResponse> getNewArrivals() {
-        return bookRepository.findNewArrivals()
+        return bookRepository.findNewArrivals(PageRequest.of(0, 10))
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -187,7 +208,9 @@ public class BookService {
         book.setCategory(request.getCategory());
         book.setSubject(request.getSubject());
         book.setDescription(request.getDescription());
-        book.setCoverImageUrl(request.getCoverImageUrl());
+        if (request.getCoverImageUrl() != null && !request.getCoverImageUrl().isBlank()) {
+            book.setCoverImageUrl(request.getCoverImageUrl());
+        }
         book.setLanguage(request.getLanguage() != null
                 ? request.getLanguage() : "English");
         book.setTotalPages(request.getTotalPages());
@@ -351,6 +374,9 @@ public class BookService {
         res.setLanguage(book.getLanguage());
         res.setTotalPages(book.getTotalPages());
         res.setCreatedAt(book.getCreatedAt());
+
+        res.setIsFeatured(book.getIsFeatured());
+        res.setFeaturedOrder(book.getFeaturedOrder());
 
         if (book.getInventories() != null) {
             res.setTotalCopies(book.getInventories().stream()

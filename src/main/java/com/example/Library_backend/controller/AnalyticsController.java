@@ -17,7 +17,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/analytics")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('SUPER_ADMIN')")
+@PreAuthorize("hasAnyRole('LIBRARIAN', 'SUPER_ADMIN')")
 public class AnalyticsController {
 
     private final AnalyticsService analyticsService;

@@ -22,5 +22,7 @@ public class BookResponse {
     private Integer       availableCopies;   // aggregated from inventory
     private Double        averageRating;     // aggregated from reviews
     private Integer       reviewCount;
+    private Boolean       isFeatured;
+    private Integer       featuredOrder;
     private LocalDateTime createdAt;
 }
