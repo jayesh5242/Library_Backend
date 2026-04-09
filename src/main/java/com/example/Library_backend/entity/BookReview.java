@@ -46,11 +46,18 @@ public class BookReview {
     @Column(name = "review_text", columnDefinition = "TEXT")
     private String reviewText;
 
+    @Builder.Default
     @Column(name = "is_approved")
     private Boolean isApproved = true;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 
 
 }

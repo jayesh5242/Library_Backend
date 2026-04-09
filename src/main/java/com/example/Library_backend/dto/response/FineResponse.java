@@ -42,6 +42,12 @@ public class FineResponse {
     @JsonProperty("paid_at")
     private LocalDateTime paidAt;
 
+    @JsonProperty("book_title")
+    private String bookTitle;
+
+    @JsonProperty("user_name")
+    private String userName;
+
     @JsonProperty("created_at")
     private LocalDateTime createdAt;
 }
