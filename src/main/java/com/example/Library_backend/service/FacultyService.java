@@ -35,6 +35,7 @@ public class FacultyService {
     // API 1: GET /api/reading-lists
     // Browse all public reading lists — Public
     // ─────────────────────────────────────────────────────────
+    @Transactional(readOnly = true)
     public List<ReadingListResponse> getAllPublicReadingLists() {
         return readingListRepository.findByIsPublicTrue()
                 .stream()
@@ -46,6 +47,7 @@ public class FacultyService {
     // API 2: GET /api/reading-lists/{id}
     // Get reading list with all books — Public
     // ─────────────────────────────────────────────────────────
+    @Transactional(readOnly = true)
     public ReadingListResponse getReadingListById(Long id) {
         ReadingList rl = readingListRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -57,6 +59,7 @@ public class FacultyService {
     // API 3: GET /api/reading-lists/my
     // Faculty's own reading lists — Faculty only
     // ─────────────────────────────────────────────────────────
+    @Transactional(readOnly = true)
     public List<ReadingListResponse> getMyReadingLists(String email) {
         User faculty = findUserByEmail(email);
         return readingListRepository.findByFacultyId(faculty.getId())
@@ -195,6 +198,7 @@ public class FacultyService {
     // API 9: GET /api/purchase-requests/my
     // Faculty's own purchase requests — Faculty only
     // ─────────────────────────────────────────────────────────
+    @Transactional(readOnly = true)
     public List<PurchaseRequestResponse> getMyPurchaseRequests(String email) {
         User faculty = findUserByEmail(email);
         return purchaseRequestRepository
@@ -247,6 +251,7 @@ public class FacultyService {
     // API 11: GET /api/purchase-requests/all
     // All purchase requests — Librarian/Admin only
     // ─────────────────────────────────────────────────────────
+    @Transactional(readOnly = true)
     public List<PurchaseRequestResponse> getAllPurchaseRequests() {
         return purchaseRequestRepository.findAllByOrderByCreatedAtDesc()
                 .stream()

@@ -5,6 +5,7 @@ import com.example.Library_backend.entity.User;
 import com.example.Library_backend.enums.Role;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,18 +23,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // ── NEW METHODS for User Management ──────────────────
 
-    // Get all users with pagination - optimized with FETCH JOIN
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.branch")
+    // Get all users with pagination - optimized with EntityGraph
+    @Override
+    @EntityGraph(attributePaths = {"branch"})
     Page<User> findAll(Pageable pageable);
 
-    // Get users by role - optimized with FETCH JOIN
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.branch WHERE u.role = :role")
-    Page<User> findByRole(@Param("role") Role role, Pageable pageable);
+    // Get users by role - optimized with EntityGraph
+    @EntityGraph(attributePaths = {"branch"})
+    Page<User> findByRole(Role role, Pageable pageable);
 
-    // Get active/inactive users - optimized with FETCH JOIN
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.branch WHERE u.isActive = :isActive")
-    Page<User> findByIsActive(
-            @Param("isActive") Boolean isActive, Pageable pageable);
+    // Get active/inactive users - optimized with EntityGraph
+    @EntityGraph(attributePaths = {"branch"})
+    Page<User> findByIsActive(Boolean isActive, Pageable pageable);
 
     // Search users by name OR email OR enrollmentNo
     @Query("SELECT u FROM User u WHERE " +

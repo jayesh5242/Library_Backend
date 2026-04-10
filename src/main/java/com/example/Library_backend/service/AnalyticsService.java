@@ -31,6 +31,7 @@ public class AnalyticsService {
     private final ReservationRepository reservationRepo;
 
     // ─── API 1: MAIN DASHBOARD ────────────────────────
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public DashboardResponse getDashboard() {
 
         DashboardResponse dashboard =
@@ -122,6 +123,7 @@ public class AnalyticsService {
     }
 
     // ─── API 2: BORROWING TRENDS ──────────────────────
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public BorrowingTrendResponse getBorrowingTrends(
             int year) {
 
@@ -159,6 +161,7 @@ public class AnalyticsService {
     }
 
     // ─── API 3: POPULAR BOOKS ─────────────────────────
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public List<PopularBookResponse> getPopularBooks(
             int limit) {
 
@@ -191,6 +194,7 @@ public class AnalyticsService {
     }
 
     // ─── API 4: BRANCH COMPARISON ─────────────────────
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public List<BranchComparisonResponse>
     getBranchComparison() {
 
@@ -255,6 +259,7 @@ public class AnalyticsService {
     }
 
     // ─── API 5: OVERDUE SUMMARY ───────────────────────
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public Map<String, Object> getOverdueSummary() {
 
         Map<String, Object> summary = new HashMap<>();
@@ -300,6 +305,7 @@ public class AnalyticsService {
     }
 
     // ─── API 6: FINE COLLECTION ───────────────────────
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public Map<String, Object> getFineCollection(
             int year) {
 
@@ -342,6 +348,7 @@ public class AnalyticsService {
     }
 
     // ─── API 7: ACTIVE USERS ──────────────────────────
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public List<Map<String, Object>> getActiveUsers(
             int limit) {
 
@@ -374,6 +381,7 @@ public class AnalyticsService {
     }
 
     // ─── API 8: CATEGORY BREAKDOWN ────────────────────
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public List<Map<String, Object>>
     getCategoryBreakdown() {
 
