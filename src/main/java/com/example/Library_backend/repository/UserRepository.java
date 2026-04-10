@@ -22,15 +22,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // ── NEW METHODS for User Management ──────────────────
 
-    // Get all users with pagination
+    // Get all users with pagination - optimized with FETCH JOIN
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.branch")
     Page<User> findAll(Pageable pageable);
 
-    // Get users by role
-    Page<User> findByRole(Role role, Pageable pageable);
+    // Get users by role - optimized with FETCH JOIN
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.branch WHERE u.role = :role")
+    Page<User> findByRole(@Param("role") Role role, Pageable pageable);
 
-    // Get active/inactive users
+    // Get active/inactive users - optimized with FETCH JOIN
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.branch WHERE u.isActive = :isActive")
     Page<User> findByIsActive(
-            Boolean isActive, Pageable pageable);
+            @Param("isActive") Boolean isActive, Pageable pageable);
 
     // Search users by name OR email OR enrollmentNo
     @Query("SELECT u FROM User u WHERE " +
