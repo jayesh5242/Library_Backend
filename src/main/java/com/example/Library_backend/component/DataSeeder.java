@@ -1,4 +1,5 @@
 package com.example.Library_backend.component;
+
 import com.example.Library_backend.entity.Branch;
 import com.example.Library_backend.entity.User;
 import com.example.Library_backend.enums.Role;
@@ -19,9 +20,9 @@ public class DataSeeder implements CommandLineRunner {
     private final BranchRepository branchRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public DataSeeder(UserRepository userRepository, 
-                      BranchRepository branchRepository, 
-                      PasswordEncoder passwordEncoder) {
+    public DataSeeder(UserRepository userRepository,
+            BranchRepository branchRepository,
+            PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.branchRepository = branchRepository;
         this.passwordEncoder = passwordEncoder;
@@ -54,7 +55,7 @@ public class DataSeeder implements CommandLineRunner {
 
     private void seedAdminIfEmpty() {
         User admin = userRepository.findByEmail("admin@library.com").orElse(null);
-        
+
         if (admin == null) {
             log.info("Seeding Super Admin account...");
             admin = new User();
@@ -64,16 +65,16 @@ public class DataSeeder implements CommandLineRunner {
             admin.setIsActive(true);
             admin.setIsEmailVerified(true);
             admin.setCreatedAt(LocalDateTime.now());
-            
+
             // Assign to the first branch
             branchRepository.findAll().stream().findFirst().ifPresent(admin::setBranch);
-        } else {
-            log.info("Admin account exists, resetting password for safety...");
-        }
 
-        admin.setPassword(passwordEncoder.encode("password123"));
-        admin.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(admin);
-        log.info("Super Admin account synced (admin@library.com / password123).");
+            admin.setPassword(passwordEncoder.encode("Admin@5979"));
+            admin.setUpdatedAt(LocalDateTime.now());
+            userRepository.save(admin);
+            log.info("Super Admin account created (admin@library.com / Admin@123).");
+        } else {
+            log.info("Admin account already exists. Skipping seeding.");
+        }
     }
 }
