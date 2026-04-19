@@ -9,6 +9,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 public class CorsConfig {
@@ -21,8 +22,11 @@ public class CorsConfig {
 
                 CorsConfiguration config = new CorsConfiguration();
 
-                // Parse the comma-separated or single URL
-                List<String> allowedOrigins = Arrays.asList(frontendUrl.split(","));
+                // Parse and trim the comma-separated or single URL
+                List<String> allowedOrigins = Arrays.stream(frontendUrl.split(","))
+                                .map(String::trim)
+                                .filter(s -> !s.isEmpty())
+                                .collect(Collectors.toList());
                 config.setAllowedOrigins(allowedOrigins);
 
                 config.setAllowedMethods(List.of(
@@ -30,6 +34,7 @@ public class CorsConfig {
                                 "DELETE", "PATCH", "OPTIONS"));
 
                 config.setAllowedHeaders(List.of("*"));
+                config.setExposedHeaders(List.of("Authorization", "Content-Type"));
                 config.setAllowCredentials(true);
                 config.setMaxAge(3600L);
 

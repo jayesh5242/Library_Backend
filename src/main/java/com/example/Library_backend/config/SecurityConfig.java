@@ -45,7 +45,8 @@ public class SecurityConfig {
                                 "/api/auth/refresh-token",
                                 "/api/auth/verify-email/**",
                                 "/swagger-ui/**",
-                                "/v3/api-docs/**"
+                                "/v3/api-docs/**",
+                                "/error"
                         ).permitAll()
                         .requestMatchers(
                                 org.springframework.http.HttpMethod.GET,
